@@ -2,9 +2,12 @@
 
 #[macro_use] extern crate rocket;
 
+extern crate lieroleague;
+use self::lieroleague::*;
+
 #[get("/")]
-fn index() -> &'static str {
-    "Hello, world!"
+fn index() -> () {
+    print!("{}", db::test_db())
 }
 
 fn main() {
