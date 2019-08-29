@@ -1,10 +1,26 @@
 {
-    "folders":
-    [
-        {
-            "path": ".",
-            "folder_exclude_patterns": ["frontend/node_modules"],
-            "file_exclude_patterns": ["lieroleague.sublime-workspace"]
-        }
-    ]
+	"folders":
+	[
+		{
+			"file_exclude_patterns":
+			[
+				"lieroleague.sublime-workspace"
+			],
+			"folder_exclude_patterns":
+			[
+				"frontend/node_modules"
+			],
+			"path": "."
+		}
+	],
+	"settings":
+	{
+		"LSP":
+		{
+			"rls":
+			{
+				"enabled": true
+			}
+		}
+	}
 }
