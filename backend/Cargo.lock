@@ -348,6 +348,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 name = "lieroleague"
 version = "0.1.0"
 dependencies = [
+ "chrono 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "eventsourcing 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "eventsourcing-derive 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "mongodb 0.3.12 (registry+https://github.com/rust-lang/crates.io-index)",
