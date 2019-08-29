@@ -1,11 +1,13 @@
+use eventsourcing::Kind::CommandFailure;
 use serde::{Serialize, Deserialize};
 use eventsourcing::{Aggregate, AggregateState, Error};
 use eventsourcing_derive::Event;
 use uuid::Uuid;
 use passwords::hasher;
+use bson;
 
 #[derive(Debug)]
-enum PlayerCommand {
+pub enum PlayerCommand {
   Create {
     real_name: String,
     email: Email,
@@ -22,7 +24,7 @@ enum PlayerCommand {
 #[derive(Serialize, Deserialize, Debug, Clone, Event)]
 #[event_type_version("1.0")]
 #[event_source("events://github.com/ahockersten/lieroleague/player")]
-enum PlayerEvent {
+pub enum PlayerEvent {
   Created {
     id: Uuid,
     real_name: String,
@@ -78,7 +80,7 @@ type Country = String;
 type Locale = String;
 
 #[derive(Debug)]
-struct PlayerData {
+pub struct PlayerData {
   id: Uuid,
   real_name: String,
   email: Email,
@@ -100,7 +102,7 @@ impl AggregateState for PlayerData {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
-struct PlayerColor {
+pub struct PlayerColor {
   r: u8,
   g: u8,
   b: u8
@@ -145,10 +147,44 @@ impl Aggregate for Player {
     Ok(data)
   }
 
-  fn handle_command(_state: &Self::State, cmd: Self::Command) -> Result<Vec<Self::Event>, Error> {
-        // SHOULD DO: validate state and command
-
-        // if validation passes...
-        Ok(vec![cmd.into()])
-      }
+  fn handle_command(state: &Self::State, cmd: Self::Command) -> Result<Vec<Self::Event>, Error> {
+    match (state, &cmd) {
+      (PlayerData {generation: 0, ..}, PlayerCommand::Create {..}) => Ok(vec![cmd.into()]),
+      (_, PlayerCommand::Create {..}) => Err(Error{kind: CommandFailure("Create is only valid on generation 0".to_string())})
     }
+  }
+}
+// FIXME functions below should be in some kind of trait with a standard implementation for
+// all events we build
+pub fn play_player(events: Vec<PlayerEvent>) -> PlayerData {
+  let initial_state: PlayerData = PlayerData {
+    id: Uuid::nil(),
+    real_name: "".to_string(),
+    email: "".to_string(),
+    password: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    salt: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    nick_name: "".to_string(),
+    color: PlayerColor { r:0, g:0, b:0 },
+    nationality: None,
+    time_zone: None,
+    location: None,
+    locale: "".to_string(),
+    generation: 0,
+  };
+  apply_events(initial_state, events)
+}
+
+fn apply_events(initial_state: PlayerData, events: Vec<PlayerEvent>) -> PlayerData {
+  events.into_iter().fold(initial_state, |state, evt| {
+    Player::apply_event(&state, evt).unwrap()
+  })
+}
+
+pub fn add_event(state: PlayerData, cmd: PlayerCommand) -> Result<PlayerData, Error> {
+  let events: Vec<PlayerEvent> = Player::handle_command(&state, cmd).unwrap();
+  let bson: Vec<bson::Bson> = events.into_iter().map(|evt| {
+    bson::to_bson(&evt).unwrap()
+  }).collect();
+  // FIXME: insert events into database here
+  Ok(apply_events(state, events))
+}

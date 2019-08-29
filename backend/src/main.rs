@@ -1,8 +1,8 @@
 #![feature(proc_macro_hygiene, decl_macro)]
 
-use rocket;
+#[macro_use] extern crate rocket;
 
-use self::lieroleague::*;
+//use self::lieroleague::*;
 
 #[get("/")]
 fn index() -> () {
