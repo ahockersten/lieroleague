@@ -1,3 +1,4 @@
+use crate::db::LieroLeagueDb;
 use rocket::{Route, post, routes};
 use crate::db;
 use eventsourcing::Kind::CommandFailure;
@@ -201,15 +202,18 @@ fn apply_events(initial_state: PlayerData, events: Vec<PlayerEvent>) -> PlayerDa
   })
 }
 
-pub fn add_command(state: PlayerData, cmd: PlayerCommand) -> Result<PlayerData, Error> {
+pub fn add_command(db: LieroLeagueDb, state: PlayerData, cmd: PlayerCommand) -> Result<PlayerData, Error> {
   let events: &Vec<PlayerEvent> = &Player::handle_command(&state, cmd).unwrap();
-  let db = db::establish_connection();
   for evt in events.into_iter() {
     // FIXME error handling
-    db::insert_event(&db, db::MongoEventCollection::Player, evt).unwrap();
+    db::insert_event(&*db, db::MongoEventCollection::Player, evt).unwrap();
   }
   Ok(apply_events(state, events.to_vec()))
 }
+
+/*pub fn initialize_players() -> Vec<PlayerData> {
+
+}*/
 
 #[derive(Deserialize)]
 struct PlayerAddData {
@@ -225,7 +229,7 @@ struct PlayerAddData {
 }
 
 #[post("/add", format = "json", data = "<player>")]
-fn add_player(player: Json<PlayerAddData>) -> () {
+fn add_player(db: LieroLeagueDb, player: Json<PlayerAddData>) -> () {
   // FIXME ugh. Really need to modify event sourcing library to use an option instead
   let initial_state: PlayerData = PlayerData {
     id: Uuid::nil(),
@@ -243,7 +247,7 @@ fn add_player(player: Json<PlayerAddData>) -> () {
   };
   // FIXME wrong function to use. You should initialize all players via play_player() instead, and then
   // input that state whenever add_event is used
-  add_command(initial_state, PlayerCommand::Create {
+  add_command(db, initial_state, PlayerCommand::Create {
     real_name: player.real_name.clone(),
     email: player.email.clone(),
     password: player.password.clone(),
