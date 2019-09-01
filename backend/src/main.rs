@@ -1,24 +1,24 @@
 #![feature(proc_macro_hygiene, decl_macro)]
 
-#[macro_use] extern crate rocket;
+#[macro_use]
+extern crate rocket;
 
 extern crate lieroleague;
-use mongodb::db::Database;
+use lieroleague::db;
 use lieroleague::player;
 use lieroleague::state;
-use lieroleague::db;
+use mongodb::db::Database;
 
 #[get("/")]
-fn index() -> () {
-
-}
-
+fn index() -> () {}
 
 fn main() {
-  rocket::ignite()
-    .attach(db::LieroLeagueDb::fairing())
-    .manage(state::State { player_data: vec!{}})
-    .mount("/", routes![index])
-    .mount("/player", player::routes())
-    .launch();
+    rocket::ignite()
+        .attach(db::LieroLeagueDb::fairing())
+        .manage(state::State {
+            player_data: vec![],
+        })
+        .mount("/", routes![index])
+        .mount("/player", player::routes())
+        .launch();
 }
