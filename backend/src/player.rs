@@ -7,6 +7,7 @@ use eventsourcing_derive::Event;
 use uuid::Uuid;
 use passwords::hasher;
 use rocket_contrib::json::Json;
+use std::mem;
 
 #[derive(Debug)]
 pub enum PlayerCommand {
@@ -31,8 +32,8 @@ pub enum PlayerEvent {
     id: Uuid,
     real_name: String,
     email: Email,
-    password: [u8; 24],
-    salt: [u8; 16],
+    salted_password: [i8; 24],
+    salt: [i8; 16],
     nick_name: String,
     color: PlayerColor,
     nationality: Option<Nationality>,
@@ -41,6 +42,7 @@ pub enum PlayerEvent {
     locale: Locale,
   },
 }
+
 
 impl From<PlayerCommand> for PlayerEvent {
   fn from(source: PlayerCommand) -> Self {
@@ -57,19 +59,25 @@ impl From<PlayerCommand> for PlayerEvent {
         locale
       } => {
         let salt = hasher::gen_salt();
-        let salted_password = hasher::bcrypt(12, &salt, &password);
-        PlayerEvent::Created {
-          id: Uuid::new_v4(),
-          real_name,
-          email,
-          password: salted_password.unwrap(), // TODO: this could fail
-          salt: salt,
-          nick_name,
-          color,
-          nationality,
-          time_zone,
-          location,
-          locale
+        let salted_password = hasher::bcrypt(12, &salt, &password).unwrap();  // TODO: this could fail
+        unsafe {
+          // No way to store unsigned values in BSON, do a conversion here instead
+          let transmuted_salt = mem::transmute::<[u8; 16], [i8; 16]>(salt);
+          let transmuted_salted_password = mem::transmute::<[u8; 24], [i8; 24]>(salted_password);
+
+          PlayerEvent::Created {
+            id: Uuid::new_v4(),
+            real_name,
+            email,
+            salted_password: transmuted_salted_password,
+            salt: transmuted_salt,
+            nick_name,
+            color,
+            nationality,
+            time_zone,
+            location,
+            locale
+          }
         }
       }
     }
@@ -86,7 +94,7 @@ pub struct PlayerData {
   id: Uuid,
   real_name: String,
   email: Email,
-  password: [u8; 24],
+  salted_password: [u8; 24],
   salt: [u8; 16],
   nick_name: String,
   color: PlayerColor,
@@ -105,8 +113,11 @@ impl AggregateState for PlayerData {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct PlayerColor {
+  #[serde(with = "bson::compat::u2f")]
   r: u8,
+  #[serde(with = "bson::compat::u2f")]
   g: u8,
+  #[serde(with = "bson::compat::u2f")]
   b: u8
 }
 
@@ -123,7 +134,7 @@ impl Aggregate for Player {
         id,
         real_name,
         email,
-        password,
+        salted_password,
         salt,
         nick_name,
         color,
@@ -131,20 +142,28 @@ impl Aggregate for Player {
         time_zone,
         location,
         locale
-      } => PlayerData {
-        id,
-        real_name,
-        email,
-        password,
-        salt,
-        nick_name,
-        color,
-        nationality,
-        time_zone,
-        location,
-        locale,
-        generation: state.generation + 1,
-      },
+      } => {
+        unsafe {
+          // These were stored signed in the database (see above),
+          // so transmute them back here
+          let transmuted_salt = mem::transmute::<[i8; 16], [u8; 16]>(salt);
+          let transmuted_salted_password = mem::transmute::<[i8; 24], [u8; 24]>(salted_password);
+          PlayerData {
+            id,
+            real_name,
+            email,
+            salted_password: transmuted_salted_password,
+            salt: transmuted_salt,
+            nick_name,
+            color,
+            nationality,
+            time_zone,
+            location,
+            locale,
+            generation: state.generation + 1,
+          }
+        }
+      }
     };
     Ok(data)
   }
@@ -163,7 +182,7 @@ pub fn play_player(events: Vec<PlayerEvent>) -> PlayerData {
     id: Uuid::nil(),
     real_name: "".to_string(),
     email: "".to_string(),
-    password: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    salted_password: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     salt: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     nick_name: "".to_string(),
     color: PlayerColor { r:0, g:0, b:0 },
@@ -212,7 +231,7 @@ fn add_player(player: Json<PlayerAddData>) -> () {
     id: Uuid::nil(),
     real_name: "".to_string(),
     email: "".to_string(),
-    password: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    salted_password: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     salt: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     nick_name: "".to_string(),
     color: PlayerColor { r:0, g:0, b:0 },
