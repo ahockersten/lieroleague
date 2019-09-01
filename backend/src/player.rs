@@ -6,6 +6,7 @@ use eventsourcing::{Aggregate, AggregateState, Error};
 use eventsourcing_derive::Event;
 use uuid::Uuid;
 use passwords::hasher;
+use rocket_contrib::json::Json;
 
 #[derive(Debug)]
 pub enum PlayerCommand {
@@ -181,7 +182,7 @@ fn apply_events(initial_state: PlayerData, events: Vec<PlayerEvent>) -> PlayerDa
   })
 }
 
-pub fn add_event(state: PlayerData, cmd: PlayerCommand) -> Result<PlayerData, Error> {
+pub fn add_command(state: PlayerData, cmd: PlayerCommand) -> Result<PlayerData, Error> {
   let events: &Vec<PlayerEvent> = &Player::handle_command(&state, cmd).unwrap();
   let db = db::establish_connection();
   for evt in events.into_iter() {
@@ -191,9 +192,50 @@ pub fn add_event(state: PlayerData, cmd: PlayerCommand) -> Result<PlayerData, Er
   Ok(apply_events(state, events.to_vec()))
 }
 
-#[post("/add_player")]
-fn add_player() -> () {
+#[derive(Deserialize)]
+struct PlayerAddData {
+    real_name: String,
+    email: String,
+    password: String,
+    nick_name: String,
+    color: PlayerColor,
+    nationality: Option<Nationality>,
+    time_zone: Option<i8>,
+    location: Option<Country>,
+    locale: Locale,
+}
 
+#[post("/add", format = "json", data = "<player>")]
+fn add_player(player: Json<PlayerAddData>) -> () {
+  // FIXME ugh. Really need to modify event sourcing library to use an option instead
+  let initial_state: PlayerData = PlayerData {
+    id: Uuid::nil(),
+    real_name: "".to_string(),
+    email: "".to_string(),
+    password: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    salt: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    nick_name: "".to_string(),
+    color: PlayerColor { r:0, g:0, b:0 },
+    nationality: None,
+    time_zone: None,
+    location: None,
+    locale: "".to_string(),
+    generation: 0,
+  };
+  // FIXME wrong function to use. You should initialize all players via play_player() instead, and then
+  // input that state whenever add_event is used
+  add_command(initial_state, PlayerCommand::Create {
+    real_name: player.real_name.clone(),
+    email: player.email.clone(),
+    password: player.password.clone(),
+    nick_name: player.nick_name.clone(),
+    color: player.color.clone(),
+    nationality: player.nationality.clone(),
+    time_zone: player.time_zone,
+    location: player.location.clone(),
+    locale: player.locale.clone(),
+  }).unwrap();
+  ()
 }
 
 pub fn routes() -> Vec<Route> {

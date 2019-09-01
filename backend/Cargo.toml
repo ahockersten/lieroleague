@@ -8,6 +8,7 @@ edition = "2018"
 
 [dependencies]
 rocket = "0.4"
+rocket_contrib = "0.4"
 eventsourcing = "0.1"
 eventsourcing-derive = "0.1"
 mongodb = { version = "0.3", features = ["ssl"] }
