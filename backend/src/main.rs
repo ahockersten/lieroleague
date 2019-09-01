@@ -7,7 +7,6 @@ extern crate lieroleague;
 use lieroleague::db;
 use lieroleague::player;
 use lieroleague::state;
-use mongodb::db::Database;
 
 #[get("/")]
 fn index() -> () {}
@@ -15,9 +14,7 @@ fn index() -> () {}
 fn main() {
     rocket::ignite()
         .attach(db::LieroLeagueDb::fairing())
-        .manage(state::State {
-            player_data: vec![],
-        })
+        .manage(state::State::default())
         .mount("/", routes![index])
         .mount("/player", player::routes())
         .launch();

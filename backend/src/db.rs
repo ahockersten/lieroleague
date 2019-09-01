@@ -2,12 +2,12 @@ extern crate mongodb;
 
 use crate::player::PlayerEvent;
 
-use bson;
 use chrono::DateTime;
 use chrono::Utc;
 use enum_display_derive::Display;
 use mongodb::db::Database;
 use mongodb::db::ThreadedDatabase;
+use mongodb::{bson, doc};
 use rocket_contrib::database;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -38,12 +38,10 @@ pub fn insert_event<T: Serialize>(
         timestamp: Utc::now(),
         data: data,
     };
-    println!("insert_event");
     // FIXME error handling
     let event_bson = bson::to_bson(&event).unwrap();
     match event_bson {
         bson::Bson::Document(event_doc) => {
-            println!("insert evn2");
             coll.insert_one(event_doc, None).unwrap();
             Ok(())
         }
@@ -52,11 +50,24 @@ pub fn insert_event<T: Serialize>(
 }
 
 pub fn initialize_models(db: &Database) {
-    fetch_player_events(&db);
+    let player_event_map = fetch_player_events(&db);
     ()
 }
 
 fn fetch_player_events(db: &Database) -> HashMap<Uuid, Vec<PlayerEvent>> {
     let coll = db.collection(&MongoEventCollection::Player.to_string());
-    HashMap::new()
+    let player_events_map = HashMap::new();
+    let mut cursor = coll
+        .aggregate(
+            vec![doc! { "$group": {"_id": "$data.Created.id", "events": {"$push": "$$ROOT"}}}],
+            None,
+        )
+        .unwrap();
+    let documents = cursor
+        .into_iter()
+        .collect::<Vec<Result<bson::Document, mongodb::Error>>>();
+    for player_events in documents {
+        println!("{}", player_events.unwrap().to_string());
+    }
+    player_events_map
 }

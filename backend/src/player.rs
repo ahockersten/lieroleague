@@ -241,6 +241,8 @@ struct PlayerAddData {
 
 #[post("/add", format = "json", data = "<player>")]
 fn add_player(db: LieroLeagueDb, player: Json<PlayerAddData>) -> () {
+    db::initialize_models(&db);
+
     // FIXME ugh. Really need to modify event sourcing library to use an option instead
     let initial_state: PlayerData = PlayerData {
         id: Uuid::nil(),
