@@ -17,6 +17,7 @@ chrono = { version = "0.4", features = ["serde"] }
 uuid = { version = "0.7", features = ["serde", "v4"] }
 passwords = { version = "1.1", features = ["crypto"] }
 bson = "0.13"
+enum-display-derive = "0.1.0"
 
 [patch.crates-io]
 eventsourcing = { git = 'https://github.com/robscllc/eventsourcing' }

@@ -1,10 +1,11 @@
+use rocket::{Route, post, routes};
+use crate::db;
 use eventsourcing::Kind::CommandFailure;
 use serde::{Serialize, Deserialize};
 use eventsourcing::{Aggregate, AggregateState, Error};
 use eventsourcing_derive::Event;
 use uuid::Uuid;
 use passwords::hasher;
-use bson;
 
 #[derive(Debug)]
 pub enum PlayerCommand {
@@ -181,10 +182,20 @@ fn apply_events(initial_state: PlayerData, events: Vec<PlayerEvent>) -> PlayerDa
 }
 
 pub fn add_event(state: PlayerData, cmd: PlayerCommand) -> Result<PlayerData, Error> {
-  let events: Vec<PlayerEvent> = Player::handle_command(&state, cmd).unwrap();
-  let bson: Vec<bson::Bson> = events.into_iter().map(|evt| {
-    bson::to_bson(&evt).unwrap()
-  }).collect();
-  // FIXME: insert events into database here
-  Ok(apply_events(state, events))
+  let events: &Vec<PlayerEvent> = &Player::handle_command(&state, cmd).unwrap();
+  let db = db::establish_connection();
+  for evt in events.into_iter() {
+    // FIXME error handling
+    db::insert_event(&db, db::MongoEventCollection::Player, evt).unwrap();
+  }
+  Ok(apply_events(state, events.to_vec()))
+}
+
+#[post("/add_player")]
+fn add_player() -> () {
+
+}
+
+pub fn routes() -> Vec<Route> {
+  routes![add_player]
 }
