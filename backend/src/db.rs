@@ -4,6 +4,7 @@ use crate::player::PlayerEvent;
 use chrono::DateTime;
 use chrono::Utc;
 use enum_display_derive::Display;
+use eventsourcing::Event;
 use mongodb::db::Database;
 use mongodb::db::ThreadedDatabase;
 use mongodb::{bson, doc};
@@ -28,10 +29,10 @@ pub struct MongoEvent<T> {
 #[database("lieroleague")]
 pub struct LieroLeagueDb(Database);
 
-pub fn insert_event<T: Serialize>(
+pub fn insert_event<E: Event>(
     db: &Database,
     collection: MongoEventCollection,
-    data: &MongoEvent<T>,
+    data: &MongoEvent<E>,
 ) -> Result<(), String> {
     let coll = db.collection(&collection.to_string());
     // FIXME error handling
@@ -47,23 +48,38 @@ pub fn insert_event<T: Serialize>(
 
 pub fn initialize_models(db: &Database) {
     let player_event_map = fetch_player_events(&db);
+    println!("{:?}", player_event_map);
     ()
 }
 
-fn fetch_player_events(db: &Database) -> HashMap<Uuid, Vec<PlayerEvent>> {
-    let coll = db.collection(&MongoEventCollection::Player.to_string());
-    let player_events_map = HashMap::new();
+fn fetch_events_by_id_sorted_by_timestamp<'a, E: Event + Deserialize<'a>>(
+    db: &Database,
+    collection: MongoEventCollection,
+) -> HashMap<Uuid, Vec<E>> {
+    let coll = db.collection(&collection.to_string());
+    let mut events_map = HashMap::new();
     let cursor = coll
         .aggregate(
-            vec![doc! { "$group": {"_id": "$data.Created.id", "events": {"$push": "$$ROOT"}}}],
+            vec![
+              doc! { "$group": {"_id": "$id", "timestamp": {"$push": "$timestamp"}, "events": {"$push": "$data"}}},
+              doc! { "$sort": {"timestamp": 1}},
+            ],
             None,
         )
         .unwrap();
     let documents = cursor
         .into_iter()
         .collect::<Vec<Result<bson::Document, mongodb::Error>>>();
-    for player_events in documents {
-        println!("{}", player_events.unwrap().to_string());
+    for document in documents {
+        let unwrapped_doc: bson::Document = document.unwrap();
+        println!("{}", unwrapped_doc);
+        let id = bson::from_bson(unwrapped_doc.get("_id").unwrap().clone()).unwrap();
+        let events = bson::from_bson(unwrapped_doc.get("events").unwrap().clone()).unwrap();
+        events_map.insert(id, events);
     }
-    player_events_map
+    events_map
+}
+
+fn fetch_player_events(db: &Database) -> HashMap<Uuid, Vec<PlayerEvent>> {
+    fetch_events_by_id_sorted_by_timestamp(db, MongoEventCollection::Player)
 }
