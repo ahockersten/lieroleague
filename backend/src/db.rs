@@ -1,7 +1,6 @@
 extern crate mongodb;
 
 use crate::player::PlayerEvent;
-
 use chrono::DateTime;
 use chrono::Utc;
 use enum_display_derive::Display;
@@ -20,9 +19,10 @@ pub enum MongoEventCollection {
 }
 
 #[derive(Serialize, Deserialize)]
-struct MongoEvent<T> {
-    timestamp: DateTime<Utc>,
-    data: T,
+pub struct MongoEvent<T> {
+    pub id: Uuid,
+    pub timestamp: DateTime<Utc>,
+    pub data: T,
 }
 
 #[database("lieroleague")]
@@ -31,15 +31,11 @@ pub struct LieroLeagueDb(Database);
 pub fn insert_event<T: Serialize>(
     db: &Database,
     collection: MongoEventCollection,
-    data: T,
+    data: &MongoEvent<T>,
 ) -> Result<(), String> {
     let coll = db.collection(&collection.to_string());
-    let event = MongoEvent::<T> {
-        timestamp: Utc::now(),
-        data: data,
-    };
     // FIXME error handling
-    let event_bson = bson::to_bson(&event).unwrap();
+    let event_bson = bson::to_bson(data).unwrap();
     match event_bson {
         bson::Bson::Document(event_doc) => {
             coll.insert_one(event_doc, None).unwrap();
@@ -57,7 +53,7 @@ pub fn initialize_models(db: &Database) {
 fn fetch_player_events(db: &Database) -> HashMap<Uuid, Vec<PlayerEvent>> {
     let coll = db.collection(&MongoEventCollection::Player.to_string());
     let player_events_map = HashMap::new();
-    let mut cursor = coll
+    let cursor = coll
         .aggregate(
             vec![doc! { "$group": {"_id": "$data.Created.id", "events": {"$push": "$$ROOT"}}}],
             None,

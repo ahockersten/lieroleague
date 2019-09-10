@@ -1,5 +1,7 @@
 use crate::db;
 use crate::db::LieroLeagueDb;
+use crate::db::MongoEvent;
+use chrono::Utc;
 use eventsourcing::Kind::CommandFailure;
 use eventsourcing::{Aggregate, AggregateState, Error};
 use eventsourcing_derive::Event;
@@ -44,9 +46,33 @@ pub enum PlayerEvent {
     },
 }
 
+impl From<PlayerEvent> for MongoEvent<PlayerEvent> {
+    fn from(evt: PlayerEvent) -> Self {
+        match evt {
+            PlayerEvent::Created {
+                id,
+                real_name: _,
+                email: _,
+                salted_password: _,
+                salt: _,
+                nick_name: _,
+                color: _,
+                nationality: _,
+                time_zone: _,
+                location: _,
+                locale: _,
+            } => MongoEvent {
+                id: id,
+                timestamp: Utc::now(),
+                data: evt,
+            },
+        }
+    }
+}
+
 impl From<PlayerCommand> for PlayerEvent {
-    fn from(source: PlayerCommand) -> Self {
-        match source {
+    fn from(evt: PlayerCommand) -> Self {
+        match evt {
             PlayerCommand::Create {
                 real_name,
                 email,
@@ -183,6 +209,7 @@ impl Aggregate for Player {
 }
 // FIXME functions below should be in some kind of trait with a standard implementation for
 // all events we build
+// Or just use Dispatcher? https://docs.rs/eventsourcing/0.1.1/eventsourcing/trait.Dispatcher.html
 pub fn play_player(events: Vec<PlayerEvent>) -> PlayerData {
     let initial_state: PlayerData = PlayerData {
         id: Uuid::nil(),
@@ -217,7 +244,8 @@ pub fn add_command(
     let events: &Vec<PlayerEvent> = &Player::handle_command(&state, cmd).unwrap();
     for evt in events.into_iter() {
         // FIXME error handling
-        db::insert_event(&*db, db::MongoEventCollection::Player, evt).unwrap();
+        let mongo_evt = MongoEvent::from(evt.clone());
+        db::insert_event(&*db, db::MongoEventCollection::Player, &mongo_evt).unwrap();
     }
     Ok(apply_events(state, events.to_vec()))
 }
