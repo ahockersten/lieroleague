@@ -50,7 +50,6 @@ pub fn insert_event<E: Event>(
 
 pub fn initialize_player_data(db: &Database) -> Vec<player::PlayerData> {
     let player_event_map = fetch_player_events(&db);
-    println!("{:?}", player_event_map);
     player_event_map
         .values()
         .map(|events| player::play_player(events.to_vec()))

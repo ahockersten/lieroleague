@@ -26,7 +26,6 @@ pub fn initialize_state(db: &Database, s: State) {
     let mut inner_state = state_ref.lock().unwrap();
     if !inner_state.initialized {
         inner_state.player_data = db::initialize_player_data(&db);
-        println!("{:?}", inner_state.player_data);
         inner_state.initialized = true;
     }
 }
