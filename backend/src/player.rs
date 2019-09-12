@@ -157,7 +157,7 @@ impl Aggregate for Player {
     type Command = PlayerCommand;
     type State = PlayerData;
 
-    fn apply_event(state: &Self::State, evt: Self::Event) -> Result<Self::State, Error> {
+    fn apply_event(state: &Option<Self::State>, evt: Self::Event) -> Result<Self::State, Error> {
         let data = match evt {
             PlayerEvent::Created {
                 id,
@@ -190,7 +190,7 @@ impl Aggregate for Player {
                         time_zone,
                         location,
                         locale,
-                        generation: state.generation + 1,
+                        generation: 0,
                     }
                 }
             }
@@ -198,11 +198,12 @@ impl Aggregate for Player {
         Ok(data)
     }
 
-    fn handle_command(state: &Self::State, cmd: Self::Command) -> Result<Vec<Self::Event>, Error> {
+    fn handle_command(
+        state: &Option<Self::State>,
+        cmd: Self::Command,
+    ) -> Result<Vec<Self::Event>, Error> {
         match (state, &cmd) {
-            (PlayerData { generation: 0, .. }, PlayerCommand::Create { .. }) => {
-                Ok(vec![cmd.into()])
-            }
+            (None, PlayerCommand::Create { .. }) => Ok(vec![cmd.into()]),
             (_, PlayerCommand::Create { .. }) => Err(Error {
                 kind: CommandFailure("Create is only valid on generation 0".to_string()),
             }),
@@ -213,34 +214,21 @@ impl Aggregate for Player {
 // all events we build
 // Or just use Dispatcher? https://docs.rs/eventsourcing/0.1.1/eventsourcing/trait.Dispatcher.html
 pub fn play_player(events: Vec<PlayerEvent>) -> PlayerData {
-    let initial_state: PlayerData = PlayerData {
-        id: Uuid::nil(),
-        real_name: "".to_string(),
-        email: "".to_string(),
-        salted_password: [
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        ],
-        salt: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        nick_name: "".to_string(),
-        color: PlayerColor { r: 0, g: 0, b: 0 },
-        nationality: None,
-        time_zone: None,
-        location: None,
-        locale: "".to_string(),
-        generation: 0,
-    };
-    apply_events(initial_state, events)
+    apply_events(None, events)
 }
 
-fn apply_events(initial_state: PlayerData, events: Vec<PlayerEvent>) -> PlayerData {
-    events.into_iter().fold(initial_state, |state, evt| {
-        Player::apply_event(&state, evt).unwrap()
+fn apply_events(initial_state: Option<PlayerData>, events: Vec<PlayerEvent>) -> PlayerData {
+    let mut events_iter = events.into_iter();
+    let first_evt = events_iter.next().unwrap();
+    let next_state = Player::apply_event(&initial_state, first_evt).unwrap();
+    events_iter.fold(next_state, |state, evt| {
+        Player::apply_event(&Some(state), evt).unwrap()
     })
 }
 
 pub fn add_command(
     db: LieroLeagueDb,
-    player_data: PlayerData,
+    player_data: Option<PlayerData>,
     cmd: PlayerCommand,
 ) -> Result<PlayerData, Error> {
     let events: &Vec<PlayerEvent> = &Player::handle_command(&player_data, cmd).unwrap();
@@ -277,26 +265,9 @@ fn get_player(db: LieroLeagueDb, state: rocket::State<State>) -> Json<Vec<Player
 #[post("/add", format = "json", data = "<player>")]
 fn add_player(db: LieroLeagueDb, player: Json<PlayerAddData>, state: rocket::State<State>) -> () {
     state::initialize_state(&db, state.clone());
-    // FIXME ugh. Really need to modify event sourcing library to use an option instead
-    let initial_state: PlayerData = PlayerData {
-        id: Uuid::nil(),
-        real_name: "".to_string(),
-        email: "".to_string(),
-        salted_password: [
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-        ],
-        salt: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        nick_name: "".to_string(),
-        color: PlayerColor { r: 0, g: 0, b: 0 },
-        nationality: None,
-        time_zone: None,
-        location: None,
-        locale: "".to_string(),
-        generation: 0,
-    };
     add_command(
         db,
-        initial_state,
+        None,
         PlayerCommand::Create {
             real_name: player.real_name.clone(),
             email: player.email.clone(),
