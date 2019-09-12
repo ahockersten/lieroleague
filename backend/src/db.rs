@@ -1,6 +1,8 @@
 extern crate mongodb;
 
+use crate::player;
 use crate::player::PlayerEvent;
+use crate::state::InnerState;
 use chrono::DateTime;
 use chrono::Utc;
 use enum_display_derive::Display;
@@ -46,10 +48,13 @@ pub fn insert_event<E: Event>(
     }
 }
 
-pub fn initialize_models(db: &Database) {
+pub fn initialize_player_data(db: &Database) -> Vec<player::PlayerData> {
     let player_event_map = fetch_player_events(&db);
     println!("{:?}", player_event_map);
-    ()
+    player_event_map
+        .values()
+        .map(|events| player::play_player(events.to_vec()))
+        .collect()
 }
 
 fn fetch_events_by_id_sorted_by_timestamp<'a, E: Event + Deserialize<'a>>(
@@ -72,7 +77,6 @@ fn fetch_events_by_id_sorted_by_timestamp<'a, E: Event + Deserialize<'a>>(
         .collect::<Vec<Result<bson::Document, mongodb::Error>>>();
     for document in documents {
         let unwrapped_doc: bson::Document = document.unwrap();
-        println!("{}", unwrapped_doc);
         let id = bson::from_bson(unwrapped_doc.get("_id").unwrap().clone()).unwrap();
         let events = bson::from_bson(unwrapped_doc.get("events").unwrap().clone()).unwrap();
         events_map.insert(id, events);

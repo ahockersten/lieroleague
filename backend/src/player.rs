@@ -1,12 +1,14 @@
 use crate::db;
 use crate::db::LieroLeagueDb;
 use crate::db::MongoEvent;
+use crate::state;
+use crate::state::State;
 use chrono::Utc;
 use eventsourcing::Kind::CommandFailure;
 use eventsourcing::{Aggregate, AggregateState, Error};
 use eventsourcing_derive::Event;
 use passwords::hasher;
-use rocket::{post, routes, Route};
+use rocket::{get, post, routes, Route};
 use rocket_contrib::json::Json;
 use serde::{Deserialize, Serialize};
 use std::mem;
@@ -116,7 +118,7 @@ type Nationality = String;
 type Country = String;
 type Locale = String;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PlayerData {
     id: Uuid,
     real_name: String,
@@ -238,21 +240,17 @@ fn apply_events(initial_state: PlayerData, events: Vec<PlayerEvent>) -> PlayerDa
 
 pub fn add_command(
     db: LieroLeagueDb,
-    state: PlayerData,
+    player_data: PlayerData,
     cmd: PlayerCommand,
 ) -> Result<PlayerData, Error> {
-    let events: &Vec<PlayerEvent> = &Player::handle_command(&state, cmd).unwrap();
+    let events: &Vec<PlayerEvent> = &Player::handle_command(&player_data, cmd).unwrap();
     for evt in events.into_iter() {
         // FIXME error handling
         let mongo_evt = MongoEvent::from(evt.clone());
         db::insert_event(&*db, db::MongoEventCollection::Player, &mongo_evt).unwrap();
     }
-    Ok(apply_events(state, events.to_vec()))
+    Ok(apply_events(player_data, events.to_vec()))
 }
-
-/*pub fn initialize_players() -> Vec<PlayerData> {
-
-}*/
 
 #[derive(Deserialize)]
 struct PlayerAddData {
@@ -267,10 +265,18 @@ struct PlayerAddData {
     locale: Locale,
 }
 
-#[post("/add", format = "json", data = "<player>")]
-fn add_player(db: LieroLeagueDb, player: Json<PlayerAddData>) -> () {
-    db::initialize_models(&db);
+#[get("/get", format = "json")]
+fn get_player(db: LieroLeagueDb, state: rocket::State<State>) -> Json<Vec<PlayerData>> {
+    // FIXME this is needed everywhere right now :/
+    state::initialize_state(&db, state.clone());
+    let s = state.clone();
+    let inner_state = s.lock().unwrap();
+    Json(inner_state.player_data.clone())
+}
 
+#[post("/add", format = "json", data = "<player>")]
+fn add_player(db: LieroLeagueDb, player: Json<PlayerAddData>, state: rocket::State<State>) -> () {
+    state::initialize_state(&db, state.clone());
     // FIXME ugh. Really need to modify event sourcing library to use an option instead
     let initial_state: PlayerData = PlayerData {
         id: Uuid::nil(),
@@ -288,8 +294,6 @@ fn add_player(db: LieroLeagueDb, player: Json<PlayerAddData>) -> () {
         locale: "".to_string(),
         generation: 0,
     };
-    // FIXME wrong function to use. You should initialize all players via play_player() instead, and then
-    // input that state whenever add_event is used
     add_command(
         db,
         initial_state,
@@ -310,5 +314,5 @@ fn add_player(db: LieroLeagueDb, player: Json<PlayerAddData>) -> () {
 }
 
 pub fn routes() -> Vec<Route> {
-    routes![add_player]
+    routes![add_player, get_player]
 }

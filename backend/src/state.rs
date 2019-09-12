@@ -1,23 +1,32 @@
 use crate::db;
-use crate::db::LieroLeagueDb;
-use crate::player;
 
-pub struct State {
+use crate::player;
+use mongodb::db::Database;
+use std::sync::Arc;
+use std::sync::Mutex;
+
+pub struct InnerState {
     pub initialized: bool,
     pub player_data: Vec<player::PlayerData>,
 }
 
-impl Default for State {
+pub type State = Arc<Mutex<InnerState>>;
+
+impl Default for InnerState {
     fn default() -> Self {
-        State {
+        InnerState {
             initialized: false,
             player_data: vec![],
         }
     }
 }
 
-pub fn initialize_state(mut s: State) {
-    if !s.initialized {
-        s.initialized = true;
+pub fn initialize_state(db: &Database, s: State) {
+    let state_ref = s.clone();
+    let mut inner_state = state_ref.lock().unwrap();
+    if !inner_state.initialized {
+        inner_state.player_data = db::initialize_player_data(&db);
+        println!("{:?}", inner_state.player_data);
+        inner_state.initialized = true;
     }
 }
