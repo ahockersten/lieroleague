@@ -21,4 +21,4 @@ bson = "0.13"
 enum-display-derive = "0.1.0"
 
 [patch.crates-io]
-eventsourcing = { git = 'https://github.com/ahockersten/eventsourcing }
+eventsourcing = { git = 'https://github.com/ahockersten/eventsourcing' }
