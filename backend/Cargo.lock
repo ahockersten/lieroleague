@@ -201,7 +201,7 @@ dependencies = [
 [[package]]
 name = "eventsourcing"
 version = "0.1.1"
-source = "git+https://github.com/ahockersten/eventsourcing#1263c21454430302b96f9ddbdfd8b634ac7b2c00"
+source = "git+https://github.com/ahockersten/eventsourcing#966b6f1d91b27e51f9de91ef55763bdc8cfd266b"
 dependencies = [
  "chrono 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.100 (registry+https://github.com/rust-lang/crates.io-index)",
