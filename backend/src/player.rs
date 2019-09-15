@@ -210,10 +210,8 @@ impl Aggregate for Player {
         }
     }
 }
-// FIXME functions below should be in some kind of trait with a standard implementation for
-// all events we build
-// Or just use Dispatcher? https://docs.rs/eventsourcing/0.1.1/eventsourcing/trait.Dispatcher.html
-pub fn play_player(events: Vec<PlayerEvent>) -> PlayerData {
+
+pub fn initialize_player(events: Vec<PlayerEvent>) -> PlayerData {
     apply_events(None, None, events)
 }
 

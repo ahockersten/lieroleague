@@ -53,7 +53,7 @@ pub fn initialize_player_data(db: &Database) -> HashMap<Uuid, player::PlayerData
     player_event_map
         .values()
         .map(|events| {
-            let player_data = player::play_player(events.to_vec());
+            let player_data = player::initialize_player(events.to_vec());
             (player_data.id, player_data)
         })
         .collect()
