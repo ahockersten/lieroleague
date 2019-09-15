@@ -48,11 +48,14 @@ pub fn insert_event<E: Event>(
     }
 }
 
-pub fn initialize_player_data(db: &Database) -> Vec<player::PlayerData> {
+pub fn initialize_player_data(db: &Database) -> HashMap<Uuid, player::PlayerData> {
     let player_event_map = fetch_player_events(&db);
     player_event_map
         .values()
-        .map(|events| player::play_player(events.to_vec()))
+        .map(|events| {
+            let player_data = player::play_player(events.to_vec());
+            (player_data.id, player_data)
+        })
         .collect()
 }
 

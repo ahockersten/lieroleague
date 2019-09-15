@@ -1,4 +1,6 @@
 use crate::db;
+use std::collections::HashMap;
+use uuid::Uuid;
 
 use crate::player;
 use mongodb::db::Database;
@@ -7,7 +9,7 @@ use std::sync::Mutex;
 
 pub struct InnerState {
     pub initialized: bool,
-    pub player_data: Vec<player::PlayerData>,
+    pub player_data: HashMap<Uuid, player::PlayerData>,
 }
 
 pub type State = Arc<Mutex<InnerState>>;
@@ -16,7 +18,7 @@ impl Default for InnerState {
     fn default() -> Self {
         InnerState {
             initialized: false,
-            player_data: vec![],
+            player_data: HashMap::new(),
         }
     }
 }

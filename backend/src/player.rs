@@ -120,17 +120,17 @@ type Locale = String;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PlayerData {
-    id: Uuid,
-    real_name: String,
-    email: Email,
+    pub id: Uuid,
+    pub real_name: String,
+    pub email: Email,
     salted_password: [u8; 24],
     salt: [u8; 16],
-    nick_name: String,
-    color: PlayerColor,
-    nationality: Option<Nationality>,
-    time_zone: Option<i8>,
-    location: Option<Country>,
-    locale: Locale,
+    pub nick_name: String,
+    pub color: PlayerColor,
+    pub nationality: Option<Nationality>,
+    pub time_zone: Option<i8>,
+    pub location: Option<Country>,
+    pub locale: Locale,
     generation: u64,
 }
 
@@ -214,20 +214,34 @@ impl Aggregate for Player {
 // all events we build
 // Or just use Dispatcher? https://docs.rs/eventsourcing/0.1.1/eventsourcing/trait.Dispatcher.html
 pub fn play_player(events: Vec<PlayerEvent>) -> PlayerData {
-    apply_events(None, events)
+    apply_events(None, None, events)
 }
 
-fn apply_events(initial_state: Option<PlayerData>, events: Vec<PlayerEvent>) -> PlayerData {
+fn apply_events(
+    initial_state: Option<PlayerData>,
+    in_state: Option<rocket::State<State>>,
+    events: Vec<PlayerEvent>,
+) -> PlayerData {
     let mut events_iter = events.into_iter();
+    // calling this function with an empty list and no state makes no sense
     let first_evt = events_iter.next().unwrap();
     let next_state = Player::apply_event(&initial_state, first_evt).unwrap();
-    events_iter.fold(next_state, |state, evt| {
+    let player_data = events_iter.fold(next_state, |state, evt| {
         Player::apply_event(&Some(state), evt).unwrap()
-    })
+    });
+    if in_state.is_some() {
+        let unwrapped_state = in_state.unwrap();
+        let mut inner_state = unwrapped_state.lock().unwrap();
+        inner_state
+            .player_data
+            .insert(player_data.id, player_data.clone());
+    }
+    player_data
 }
 
 pub fn add_command(
     db: LieroLeagueDb,
+    state: rocket::State<State>,
     player_data: Option<PlayerData>,
     cmd: PlayerCommand,
 ) -> Result<PlayerData, Error> {
@@ -237,7 +251,7 @@ pub fn add_command(
         let mongo_evt = MongoEvent::from(evt.clone());
         db::insert_event(&*db, db::MongoEventCollection::Player, &mongo_evt).unwrap();
     }
-    Ok(apply_events(player_data, events.to_vec()))
+    Ok(apply_events(player_data, Some(state), events.to_vec()))
 }
 
 #[derive(Deserialize)]
@@ -259,7 +273,7 @@ fn get_player(db: LieroLeagueDb, state: rocket::State<State>) -> Json<Vec<Player
     state::initialize_state(&db, state.clone());
     let s = state.clone();
     let inner_state = s.lock().unwrap();
-    Json(inner_state.player_data.clone())
+    Json(inner_state.player_data.values().cloned().collect())
 }
 
 #[post("/add", format = "json", data = "<player>")]
@@ -267,6 +281,7 @@ fn add_player(db: LieroLeagueDb, player: Json<PlayerAddData>, state: rocket::Sta
     state::initialize_state(&db, state.clone());
     add_command(
         db,
+        state,
         None,
         PlayerCommand::Create {
             real_name: player.real_name.clone(),
