@@ -1,3 +1,7 @@
+use rocket::http::hyper::StatusCode;
+use rocket::http::hyper::StatusCode::Forbidden;
+use std::collections::HashMap;
+
 use crate::db;
 use crate::db::LieroLeagueDb;
 use crate::db::MongoEvent;
@@ -27,6 +31,8 @@ pub enum PlayerCommand {
         location: Option<Country>,
         locale: Locale,
     },
+    LoginSuccess,
+    LoginFail, // FIXME add ip number of login attempt for
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Event)]
@@ -109,6 +115,8 @@ impl From<PlayerCommand> for PlayerEvent {
                     }
                 }
             }
+            PlayerCommand::LoginSuccess {} => panic!("login success"),
+            PlayerCommand::LoginFail {} => panic!("login fail"),
         }
     }
 }
@@ -204,9 +212,15 @@ impl Aggregate for Player {
     ) -> Result<Vec<Self::Event>, Error> {
         match (state, &cmd) {
             (None, PlayerCommand::Create { .. }) => Ok(vec![cmd.into()]),
+            (None, _) => Err(Error {
+                kind: CommandFailure(
+                    "Only create is valid when there is no existing data".to_string(),
+                ),
+            }),
             (_, PlayerCommand::Create { .. }) => Err(Error {
                 kind: CommandFailure("Create is only valid on generation 0".to_string()),
             }),
+            (_, _) => Ok(vec![cmd.into()]),
         }
     }
 }
@@ -275,28 +289,113 @@ fn get_player(db: LieroLeagueDb, state: rocket::State<State>) -> Json<Vec<Player
 }
 
 #[post("/add", format = "json", data = "<player>")]
-fn add_player(db: LieroLeagueDb, player: Json<PlayerAddData>, state: rocket::State<State>) -> () {
+fn add_player(
+    db: LieroLeagueDb,
+    player: Json<PlayerAddData>,
+    state: rocket::State<State>,
+) -> Result<(), StatusCode> {
     state::initialize_state(&db, state.clone());
-    add_command(
-        db,
-        state,
-        None,
-        PlayerCommand::Create {
-            real_name: player.real_name.clone(),
-            email: player.email.clone(),
-            password: player.password.clone(),
-            nick_name: player.nick_name.clone(),
-            color: player.color.clone(),
-            nationality: player.nationality.clone(),
-            time_zone: player.time_zone,
-            location: player.location.clone(),
-            locale: player.locale.clone(),
-        },
-    )
-    .unwrap();
-    ()
+    let s = state.clone();
+    let maybe_player_data =
+        find_existing_player_data(s.lock().unwrap().player_data.clone(), player.email.clone());
+    match maybe_player_data {
+        None => {
+            add_command(
+                db,
+                state,
+                None,
+                PlayerCommand::Create {
+                    real_name: player.real_name.clone(),
+                    email: player.email.clone(),
+                    password: player.password.clone(),
+                    nick_name: player.nick_name.clone(),
+                    color: player.color.clone(),
+                    nationality: player.nationality.clone(),
+                    time_zone: player.time_zone,
+                    location: player.location.clone(),
+                    locale: player.locale.clone(),
+                },
+            )
+            .unwrap();
+            Ok(())
+        }
+        Some(_player_data) => Err(Forbidden),
+    }
+}
+
+#[post("/login", format = "json", data = "<login_data>")]
+fn login_player(
+    db: LieroLeagueDb,
+    login_data: Json<PlayerLoginData>,
+    state: rocket::State<State>,
+) -> () {
+    state::initialize_state(&db, state.clone());
+    let s = state.clone();
+    let command_result = verify_login(
+        s.lock().unwrap().player_data.clone(),
+        login_data.into_inner(),
+    );
+    match command_result {
+        Ok(command) => {
+            add_command(db, state, None, command).unwrap();
+            ()
+        }
+        Err(err) => {
+            println!("Error occurred during login {:?}", err);
+            ()
+        }
+    }
+}
+
+trait UserLoginError {}
+
+#[derive(Debug, Clone)]
+struct UserNotFoundError;
+impl UserLoginError for UserNotFoundError {}
+#[derive(Debug, Clone)]
+struct UserFailedLoginError;
+impl UserLoginError for UserFailedLoginError {}
+
+fn verify_login(
+    player_datas: HashMap<Uuid, PlayerData>,
+    login_data: PlayerLoginData,
+) -> Result<PlayerCommand, UserNotFoundError> {
+    let maybe_player_data = find_existing_player_data(player_datas, login_data.email);
+    println!("verify_login");
+    match maybe_player_data {
+        None => Err(UserNotFoundError),
+        Some(player_data) => {
+            let password_ok_result = hasher::identify_bcrypt(
+                12,
+                &player_data.salt,
+                &login_data.password,
+                &player_data.salted_password,
+            );
+            match password_ok_result {
+                Ok(true) => Ok(PlayerCommand::LoginSuccess),
+                Ok(false) => Ok(PlayerCommand::LoginFail),
+                Err(err) => panic!("Got error when trying to decrypt password: {}", err),
+            }
+        }
+    }
+}
+
+fn find_existing_player_data(
+    player_datas: HashMap<Uuid, PlayerData>,
+    email: String,
+) -> Option<PlayerData> {
+    player_datas
+        .values()
+        .find(|&player| player.email == email)
+        .map(|player_data| player_data.clone())
+}
+
+#[derive(Deserialize)]
+struct PlayerLoginData {
+    email: Email,
+    password: String,
 }
 
 pub fn routes() -> Vec<Route> {
-    routes![add_player, get_player]
+    routes![add_player, get_player, login_player]
 }
