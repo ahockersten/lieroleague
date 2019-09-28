@@ -1,9 +1,14 @@
-import Button from '@material-ui/core/Button';
 import React from 'react';
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import AddPlayer from './AddPlayer'
 
 const App: React.FC = () =>
-  <Button variant="contained" color="primary">
-    Hello World
-  </Button>
+  <Router>
+    <Switch>
+      <Route path="/">
+        <AddPlayer />
+      </Route>
+    </Switch>
+  </Router>
 
 export default App;
