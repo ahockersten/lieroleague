@@ -1,5 +1,6 @@
 use rocket::http::hyper::StatusCode;
 use rocket::http::hyper::StatusCode::Forbidden;
+use rocket::http::{Cookie, Cookies};
 use std::collections::HashMap;
 
 use crate::db;
@@ -31,8 +32,12 @@ pub enum PlayerCommand {
         location: Option<Country>,
         locale: Locale,
     },
-    LoginSuccess,
-    LoginFail, // FIXME add ip number of login attempt for
+    LoginSuccess {
+        id: Uuid,
+    },
+    LoginFail {
+        id: Uuid,
+    }, // FIXME add ip number of login attempt for tracking purposes
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, Event)]
@@ -52,6 +57,12 @@ pub enum PlayerEvent {
         location: Option<Country>,
         locale: Locale,
     },
+    LoggedIn {
+        id: Uuid,
+    },
+    LoginFailure {
+        id: Uuid,
+    },
 }
 
 impl From<PlayerEvent> for MongoEvent<PlayerEvent> {
@@ -70,6 +81,16 @@ impl From<PlayerEvent> for MongoEvent<PlayerEvent> {
                 location: _,
                 locale: _,
             } => MongoEvent {
+                id: id,
+                timestamp: Utc::now(),
+                data: evt,
+            },
+            PlayerEvent::LoggedIn { id } => MongoEvent {
+                id: id,
+                timestamp: Utc::now(),
+                data: evt,
+            },
+            PlayerEvent::LoginFailure { id } => MongoEvent {
                 id: id,
                 timestamp: Utc::now(),
                 data: evt,
@@ -115,8 +136,8 @@ impl From<PlayerCommand> for PlayerEvent {
                     }
                 }
             }
-            PlayerCommand::LoginSuccess {} => panic!("login success"),
-            PlayerCommand::LoginFail {} => panic!("login fail"),
+            PlayerCommand::LoginSuccess { id } => PlayerEvent::LoggedIn { id },
+            PlayerCommand::LoginFail { id } => PlayerEvent::LoginFailure { id },
         }
     }
 }
@@ -202,6 +223,8 @@ impl Aggregate for Player {
                     }
                 }
             }
+            PlayerEvent::LoggedIn { .. } => state.clone().unwrap(),
+            PlayerEvent::LoginFailure { .. } => state.clone().unwrap(),
         };
         Ok(data)
     }
@@ -210,6 +233,7 @@ impl Aggregate for Player {
         state: &Option<Self::State>,
         cmd: Self::Command,
     ) -> Result<Vec<Self::Event>, Error> {
+        println!("{:?} {:?}", state, cmd);
         match (state, &cmd) {
             (None, PlayerCommand::Create { .. }) => Ok(vec![cmd.into()]),
             (None, _) => Err(Error {
@@ -296,8 +320,10 @@ fn add_player(
 ) -> Result<(), StatusCode> {
     state::initialize_state(&db, state.clone());
     let s = state.clone();
-    let maybe_player_data =
-        find_existing_player_data(s.lock().unwrap().player_data.clone(), player.email.clone());
+    let maybe_player_data = find_existing_player_data_by_email(
+        s.lock().unwrap().player_data.clone(),
+        player.email.clone(),
+    );
     match maybe_player_data {
         None => {
             add_command(
@@ -323,27 +349,40 @@ fn add_player(
     }
 }
 
-#[post("/login", format = "json", data = "<login_data>")]
+#[post("/login", format = "json", data = "<login_data_json>")]
 fn login_player(
     db: LieroLeagueDb,
-    login_data: Json<PlayerLoginData>,
+    login_data_json: Json<PlayerLoginData>,
     state: rocket::State<State>,
+    mut cookies: Cookies,
 ) -> () {
     state::initialize_state(&db, state.clone());
     let s = state.clone();
-    let command_result = verify_login(
-        s.lock().unwrap().player_data.clone(),
-        login_data.into_inner(),
-    );
-    match command_result {
-        Ok(command) => {
-            add_command(db, state, None, command).unwrap();
-            ()
+    let player_datas = s.lock().unwrap().player_data.clone();
+    let login_data = login_data_json.into_inner();
+    let maybe_player_data =
+        find_existing_player_data_by_email(player_datas, login_data.email.clone());
+    match maybe_player_data {
+        Some(player_data) => {
+            let command_result = verify_login(player_data.clone(), login_data);
+            match command_result {
+                Ok(command) => match add_command(db, state, Some(player_data), command) {
+                    Ok(data) => {
+                        cookies.add_private(
+                            Cookie::build("user_id", data.id.to_string())
+                                .secure(true)
+                                .finish(),
+                        );
+                    }
+                    Err(err) => println!("Error occurred during login {:?}", err),
+                },
+                Err(err) => {
+                    println!("Error occurred during login {:?}", err);
+                    ()
+                }
+            }
         }
-        Err(err) => {
-            println!("Error occurred during login {:?}", err);
-            ()
-        }
+        None => (),
     }
 }
 
@@ -357,30 +396,23 @@ struct UserFailedLoginError;
 impl UserLoginError for UserFailedLoginError {}
 
 fn verify_login(
-    player_datas: HashMap<Uuid, PlayerData>,
+    player_data: PlayerData,
     login_data: PlayerLoginData,
 ) -> Result<PlayerCommand, UserNotFoundError> {
-    let maybe_player_data = find_existing_player_data(player_datas, login_data.email);
-    println!("verify_login");
-    match maybe_player_data {
-        None => Err(UserNotFoundError),
-        Some(player_data) => {
-            let password_ok_result = hasher::identify_bcrypt(
-                12,
-                &player_data.salt,
-                &login_data.password,
-                &player_data.salted_password,
-            );
-            match password_ok_result {
-                Ok(true) => Ok(PlayerCommand::LoginSuccess),
-                Ok(false) => Ok(PlayerCommand::LoginFail),
-                Err(err) => panic!("Got error when trying to decrypt password: {}", err),
-            }
-        }
+    let password_ok_result = hasher::identify_bcrypt(
+        12,
+        &player_data.salt,
+        &login_data.password,
+        &player_data.salted_password,
+    );
+    match password_ok_result {
+        Ok(true) => Ok(PlayerCommand::LoginSuccess { id: player_data.id }),
+        Ok(false) => Ok(PlayerCommand::LoginFail { id: player_data.id }),
+        Err(err) => panic!("Got error when trying to decrypt password: {}", err),
     }
 }
 
-fn find_existing_player_data(
+fn find_existing_player_data_by_email(
     player_datas: HashMap<Uuid, PlayerData>,
     email: String,
 ) -> Option<PlayerData> {
