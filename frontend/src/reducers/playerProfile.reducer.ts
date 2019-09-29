@@ -2,10 +2,12 @@ import { Actions, BaseAction } from '../store/actionCreators';
 
 export type PlayerProfile = {
   nickName?: string;
+  email?: string;
 };
 
 const defaultPlayerProfile = {
-  nickName: undefined
+  nickName: undefined,
+  email: undefined
 }
 
 export const playerProfileReducer = (state: PlayerProfile = defaultPlayerProfile, action: BaseAction) => {

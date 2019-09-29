@@ -9,11 +9,11 @@ const App: React.FC = () =>
   <Provider store={store}>
     <Router>
       <Switch>
-        <Route path="/">
-          <Login />
-        </Route>
         <Route path="/add-player">
           <AddPlayer />
+        </Route>
+        <Route path="/">
+          <Login />
         </Route>
       </Switch>
     </Router>

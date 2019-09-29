@@ -1,7 +1,6 @@
 use rocket::http::hyper::StatusCode;
 use rocket::http::hyper::StatusCode::Forbidden;
 use rocket::http::{Cookie, Cookies};
-use rocket::response::status::BadRequest;
 use std::collections::HashMap;
 
 use crate::db;
@@ -387,8 +386,10 @@ fn login_player(
 }
 
 #[derive(Deserialize, Serialize)]
+#[allow(non_snake_case)]
 struct PlayerProfile {
-    nick_name: String,
+    nickName: String,
+    email: String,
 }
 
 #[get("/profile", format = "json")]
@@ -413,7 +414,8 @@ fn get_profile(
                 .find(|player| player.id == cookie_uuid)
                 .unwrap();
             Some(Json(PlayerProfile {
-                nick_name: player_data.nick_name,
+                nickName: player_data.nick_name,
+                email: player_data.email,
             }))
         }
     }

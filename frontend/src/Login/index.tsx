@@ -1,23 +1,27 @@
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
-import React from 'react';
+import React, {useState} from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
 import { loginWatcher } from '../store/actionCreators';
 import { State } from '../reducers';
+import { PlayerProfile } from '../reducers/playerProfile.reducer'
 
 interface LoginProps {
   loginWatcher: typeof loginWatcher;
+  playerProfile: PlayerProfile;
 }
 
 const Login: React.FC<LoginProps> = (props: LoginProps, state: State) => {
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     props.loginWatcher({
-      email: "test@example.com",
-      password: "pass"
+      email: emailField,
+      password: passwordField
     });
   }
+  const [emailField, setEmailField] = useState(props.playerProfile.email || "");
+  const [passwordField, setPasswordField] = useState("");
 
   return <form onSubmit={onSubmit}>
     <TextField
@@ -27,7 +31,8 @@ const Login: React.FC<LoginProps> = (props: LoginProps, state: State) => {
       name="email"
       autoComplete="email"
       label="Email"
-      defaultValue=""
+      value={emailField}
+      onChange={(e) => setEmailField(e.target.value)}
       margin="normal"
       variant="outlined"
     />
@@ -38,6 +43,8 @@ const Login: React.FC<LoginProps> = (props: LoginProps, state: State) => {
       autoComplete="new-password"
       margin="normal"
       variant="outlined"
+      value={passwordField}
+      onChange={(e) => setPasswordField(e.target.value)}
     />
     <Button variant="contained" color="primary" type="submit">
       Login
@@ -46,6 +53,7 @@ const Login: React.FC<LoginProps> = (props: LoginProps, state: State) => {
 }
 
 const mapStateToProps = (state: State) => ({
+  playerProfile: state.playerProfile
 })
 
 // mapping dispatch functions to the props of LoginForm component
