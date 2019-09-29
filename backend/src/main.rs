@@ -1,8 +1,5 @@
 #![feature(proc_macro_hygiene, decl_macro)]
 
-#[macro_use]
-extern crate rocket;
-
 extern crate lieroleague;
 use lieroleague::db;
 use lieroleague::player;
@@ -10,9 +7,6 @@ use lieroleague::state;
 use rocket::http::Method;
 use rocket_cors;
 use rocket_cors::{AllowedOrigins, Error};
-
-#[get("/")]
-fn index() -> () {}
 
 fn main() -> Result<(), Error> {
     let allowed_origins = AllowedOrigins::some_exact(&["http://localhost:3000"]);
@@ -34,7 +28,6 @@ fn main() -> Result<(), Error> {
     rocket::ignite()
         .attach(db::LieroLeagueDb::fairing())
         .manage(state::State::default())
-        .mount("/", routes![index])
         .mount("/player", player::routes())
         .attach(cors)
         .launch();

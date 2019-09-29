@@ -1,21 +1,21 @@
-use rocket::http::hyper::StatusCode;
-use rocket::http::hyper::StatusCode::Forbidden;
-use rocket::http::{Cookie, Cookies};
-use std::collections::HashMap;
-
 use crate::db;
 use crate::db::LieroLeagueDb;
 use crate::db::MongoEvent;
 use crate::state;
 use crate::state::State;
+
 use chrono::Utc;
 use eventsourcing::Kind::CommandFailure;
 use eventsourcing::{Aggregate, AggregateState, Error};
 use eventsourcing_derive::Event;
 use passwords::hasher;
+use rocket::http::hyper::StatusCode;
+use rocket::http::hyper::StatusCode::Forbidden;
+use rocket::http::{Cookie, Cookies};
 use rocket::{get, post, routes, Route};
 use rocket_contrib::json::Json;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::mem;
 use uuid::Uuid;
 
@@ -148,6 +148,16 @@ type Country = String;
 type Locale = String;
 type TimeZoneString = String;
 
+#[derive(Serialize, Deserialize, Clone, Debug)]
+pub struct PlayerColor {
+    #[serde(with = "bson::compat::u2f")]
+    r: u8,
+    #[serde(with = "bson::compat::u2f")]
+    g: u8,
+    #[serde(with = "bson::compat::u2f")]
+    b: u8,
+}
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PlayerData {
     pub id: Uuid,
@@ -168,16 +178,6 @@ impl AggregateState for PlayerData {
     fn generation(&self) -> u64 {
         self.generation
     }
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug)]
-pub struct PlayerColor {
-    #[serde(with = "bson::compat::u2f")]
-    r: u8,
-    #[serde(with = "bson::compat::u2f")]
-    g: u8,
-    #[serde(with = "bson::compat::u2f")]
-    b: u8,
 }
 
 struct Player;
@@ -203,8 +203,8 @@ impl Aggregate for Player {
                 locale,
             } => {
                 unsafe {
-                    // These were stored signed in the database (see above),
-                    // so transmute them back here
+                    // These were stored signed in the database (see PlayerCommand to PlayerEvent
+                    // conversion above), so transmute them back here
                     let transmuted_salt = mem::transmute::<[i8; 16], [u8; 16]>(salt);
                     let transmuted_salted_password =
                         mem::transmute::<[i8; 24], [u8; 24]>(salted_password);
@@ -290,6 +290,42 @@ pub fn add_command(
     Ok(apply_events(player_data, Some(state), events.to_vec()))
 }
 
+trait UserLoginError {}
+
+#[derive(Debug, Clone)]
+struct UserNotFoundError;
+impl UserLoginError for UserNotFoundError {}
+#[derive(Debug, Clone)]
+struct UserFailedLoginError;
+impl UserLoginError for UserFailedLoginError {}
+
+fn verify_login(
+    player_data: PlayerData,
+    login_data: PlayerLoginData,
+) -> Result<PlayerCommand, UserNotFoundError> {
+    let password_ok_result = hasher::identify_bcrypt(
+        12,
+        &player_data.salt,
+        &login_data.password,
+        &player_data.salted_password,
+    );
+    match password_ok_result {
+        Ok(true) => Ok(PlayerCommand::LoginSuccess { id: player_data.id }),
+        Ok(false) => Ok(PlayerCommand::LoginFail { id: player_data.id }),
+        Err(err) => panic!("Got error when trying to decrypt password: {}", err),
+    }
+}
+
+fn find_existing_player_data_by_email(
+    player_datas: HashMap<Uuid, PlayerData>,
+    email: String,
+) -> Option<PlayerData> {
+    player_datas
+        .values()
+        .find(|&player| player.email == email)
+        .map(|player_data| player_data.clone())
+}
+
 #[derive(Deserialize)]
 struct PlayerAddData {
     real_name: String,
@@ -301,15 +337,6 @@ struct PlayerAddData {
     time_zone: Option<TimeZoneString>,
     location: Option<Country>,
     locale: Locale,
-}
-
-#[get("/get", format = "json")]
-fn get_player(db: LieroLeagueDb, state: rocket::State<State>) -> Json<Vec<PlayerData>> {
-    // FIXME this is needed everywhere right now :/
-    state::initialize_state(&db, state.clone());
-    let s = state.clone();
-    let inner_state = s.lock().unwrap();
-    Json(inner_state.player_data.values().cloned().collect())
 }
 
 #[post("/add", format = "json", data = "<player>")]
@@ -347,6 +374,12 @@ fn add_player(
         }
         Some(_player_data) => Err(Forbidden),
     }
+}
+
+#[derive(Deserialize)]
+struct PlayerLoginData {
+    email: Email,
+    password: String,
 }
 
 #[post("/login", format = "json", data = "<login_data_json>")]
@@ -434,48 +467,6 @@ fn get_profile(
     }
 }
 
-trait UserLoginError {}
-
-#[derive(Debug, Clone)]
-struct UserNotFoundError;
-impl UserLoginError for UserNotFoundError {}
-#[derive(Debug, Clone)]
-struct UserFailedLoginError;
-impl UserLoginError for UserFailedLoginError {}
-
-fn verify_login(
-    player_data: PlayerData,
-    login_data: PlayerLoginData,
-) -> Result<PlayerCommand, UserNotFoundError> {
-    let password_ok_result = hasher::identify_bcrypt(
-        12,
-        &player_data.salt,
-        &login_data.password,
-        &player_data.salted_password,
-    );
-    match password_ok_result {
-        Ok(true) => Ok(PlayerCommand::LoginSuccess { id: player_data.id }),
-        Ok(false) => Ok(PlayerCommand::LoginFail { id: player_data.id }),
-        Err(err) => panic!("Got error when trying to decrypt password: {}", err),
-    }
-}
-
-fn find_existing_player_data_by_email(
-    player_datas: HashMap<Uuid, PlayerData>,
-    email: String,
-) -> Option<PlayerData> {
-    player_datas
-        .values()
-        .find(|&player| player.email == email)
-        .map(|player_data| player_data.clone())
-}
-
-#[derive(Deserialize)]
-struct PlayerLoginData {
-    email: Email,
-    password: String,
-}
-
 pub fn routes() -> Vec<Route> {
-    routes![add_player, get_player, get_profile, login_player]
+    routes![add_player, get_profile, login_player]
 }

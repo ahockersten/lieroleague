@@ -1,11 +1,11 @@
 use crate::db;
-use std::collections::HashMap;
-use uuid::Uuid;
-
 use crate::player;
+
 use mongodb::db::Database;
+use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::Mutex;
+use uuid::Uuid;
 
 pub struct InnerState {
     pub initialized: bool,
