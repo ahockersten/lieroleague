@@ -302,7 +302,7 @@ impl UserLoginError for UserFailedLoginError {}
 fn verify_login(
     player_data: PlayerData,
     login_data: PlayerLoginData,
-) -> Result<PlayerCommand, UserNotFoundError> {
+) -> Result<PlayerCommand, UserFailedLoginError> {
     let password_ok_result = hasher::identify_bcrypt(
         12,
         &player_data.salt,
@@ -312,7 +312,10 @@ fn verify_login(
     match password_ok_result {
         Ok(true) => Ok(PlayerCommand::LoginSuccess { id: player_data.id }),
         Ok(false) => Ok(PlayerCommand::LoginFail { id: player_data.id }),
-        Err(err) => panic!("Got error when trying to decrypt password: {}", err),
+        Err(err) => {
+            println!("Login failed due to error {}", err);
+            Err(UserFailedLoginError)
+        }
     }
 }
 
@@ -388,7 +391,7 @@ fn login_player(
     login_data_json: Json<PlayerLoginData>,
     state: rocket::State<State>,
     mut cookies: Cookies,
-) -> () {
+) -> Option<()> {
     state::initialize_state(&db, state.clone());
     let s = state.clone();
     let player_datas = s.lock().unwrap().player_data.clone();
@@ -406,16 +409,20 @@ fn login_player(
                                 .secure(false) // FIXME true if not-dev mode
                                 .finish(),
                         );
+                        Some(())
                     }
-                    Err(err) => println!("Error occurred during login {:?}", err),
+                    Err(err) => {
+                        println!("Error occurred during login {:?}", err);
+                        None
+                    }
                 },
                 Err(err) => {
                     println!("Error occurred during login {:?}", err);
-                    ()
+                    None
                 }
             }
         }
-        None => (), // FIXME return error here
+        None => None,
     }
 }
 
