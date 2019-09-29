@@ -28,7 +28,7 @@ pub enum PlayerCommand {
         nick_name: String,
         color: PlayerColor,
         nationality: Option<Nationality>,
-        time_zone: Option<i8>,
+        time_zone: Option<TimeZoneString>,
         location: Option<Country>,
         locale: Locale,
     },
@@ -53,7 +53,7 @@ pub enum PlayerEvent {
         nick_name: String,
         color: PlayerColor,
         nationality: Option<Nationality>,
-        time_zone: Option<i8>,
+        time_zone: Option<TimeZoneString>,
         location: Option<Country>,
         locale: Locale,
     },
@@ -146,6 +146,7 @@ type Email = String;
 type Nationality = String;
 type Country = String;
 type Locale = String;
+type TimeZoneString = String;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PlayerData {
@@ -157,7 +158,7 @@ pub struct PlayerData {
     pub nick_name: String,
     pub color: PlayerColor,
     pub nationality: Option<Nationality>,
-    pub time_zone: Option<i8>,
+    pub time_zone: Option<TimeZoneString>,
     pub location: Option<Country>,
     pub locale: Locale,
     generation: u64,
@@ -297,7 +298,7 @@ struct PlayerAddData {
     nick_name: String,
     color: PlayerColor,
     nationality: Option<Nationality>,
-    time_zone: Option<i8>,
+    time_zone: Option<TimeZoneString>,
     location: Option<Country>,
     locale: Locale,
 }
@@ -336,7 +337,7 @@ fn add_player(
                     nick_name: player.nick_name.clone(),
                     color: player.color.clone(),
                     nationality: player.nationality.clone(),
-                    time_zone: player.time_zone,
+                    time_zone: player.time_zone.clone(),
                     location: player.location.clone(),
                     locale: player.locale.clone(),
                 },
@@ -389,7 +390,13 @@ fn login_player(
 #[allow(non_snake_case)]
 struct PlayerProfile {
     nickName: String,
-    email: String,
+    email: Email,
+    realName: String,
+    color: PlayerColor,
+    nationality: Option<Nationality>,
+    timeZone: Option<TimeZoneString>,
+    location: Option<Country>,
+    locale: Locale,
 }
 
 #[get("/profile", format = "json")]
@@ -416,6 +423,12 @@ fn get_profile(
             Some(Json(PlayerProfile {
                 nickName: player_data.nick_name,
                 email: player_data.email,
+                realName: player_data.real_name,
+                color: player_data.color,
+                nationality: player_data.nationality,
+                timeZone: player_data.time_zone,
+                location: player_data.location,
+                locale: player_data.locale,
             }))
         }
     }
