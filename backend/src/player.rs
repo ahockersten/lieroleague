@@ -1,6 +1,7 @@
 use rocket::http::hyper::StatusCode;
 use rocket::http::hyper::StatusCode::Forbidden;
 use rocket::http::{Cookie, Cookies};
+use rocket::response::status::BadRequest;
 use std::collections::HashMap;
 
 use crate::db;
@@ -233,7 +234,6 @@ impl Aggregate for Player {
         state: &Option<Self::State>,
         cmd: Self::Command,
     ) -> Result<Vec<Self::Event>, Error> {
-        println!("{:?} {:?}", state, cmd);
         match (state, &cmd) {
             (None, PlayerCommand::Create { .. }) => Ok(vec![cmd.into()]),
             (None, _) => Err(Error {
@@ -370,7 +370,7 @@ fn login_player(
                     Ok(data) => {
                         cookies.add_private(
                             Cookie::build("user_id", data.id.to_string())
-                                .secure(true)
+                                .secure(false) // FIXME true if not-dev mode
                                 .finish(),
                         );
                     }
@@ -382,7 +382,43 @@ fn login_player(
                 }
             }
         }
-        None => (),
+        None => (), // FIXME return error here
+    }
+}
+
+#[derive(Deserialize, Serialize)]
+struct PlayerProfile {
+    nick_name: String,
+}
+
+#[get("/profile", format = "json")]
+fn get_profile(
+    db: LieroLeagueDb,
+    state: rocket::State<State>,
+    mut cookies: Cookies,
+) -> Option<Json<PlayerProfile>> {
+    // FIXME this is needed everywhere right now :/
+    state::initialize_state(&db, state.clone());
+    for c in cookies.iter() {
+        println!("Name: '{}', Value: '{}'", c.name(), c.value());
+    }
+    let maybe_user_id_cookie = cookies.get_private("user_id");
+    match maybe_user_id_cookie {
+        None => None,
+        Some(user_id_cookie) => {
+            let s = state.clone();
+            let inner_state = s.lock().unwrap();
+            let cookie_uuid = Uuid::parse_str(user_id_cookie.value()).unwrap();
+            let player_data = inner_state
+                .player_data
+                .values()
+                .cloned()
+                .find(|player| player.id == cookie_uuid)
+                .unwrap();
+            Some(Json(PlayerProfile {
+                nick_name: player_data.nick_name,
+            }))
+        }
     }
 }
 
@@ -429,5 +465,5 @@ struct PlayerLoginData {
 }
 
 pub fn routes() -> Vec<Route> {
-    routes![add_player, get_player, login_player]
+    routes![add_player, get_player, get_profile, login_player]
 }
