@@ -3,19 +3,19 @@ import TextField from '@material-ui/core/TextField';
 import React, {useState} from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
-import { loginWatcher } from '../store/actionCreators';
+import { watchLogin } from '../store/actionCreators';
 import { State } from '../reducers';
 import { PlayerProfile } from '../reducers/playerProfile.reducer'
 
 interface LoginProps {
-  loginWatcher: typeof loginWatcher;
+  watchLogin: typeof watchLogin;
   playerProfile: PlayerProfile;
 }
 
 const Login: React.FC<LoginProps> = (props: LoginProps, state: State) => {
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    props.loginWatcher({
+    props.watchLogin({
       email: emailField,
       password: passwordField
     });
@@ -59,7 +59,7 @@ const mapStateToProps = (state: State) => ({
 // mapping dispatch functions to the props of LoginForm component
 const mapDispatchToProps = (dispatch: Dispatch) => {
   return bindActionCreators({
-    loginWatcher
+    watchLogin
     // add other watcher sagas to this object to map them to props
   }, dispatch);
 }

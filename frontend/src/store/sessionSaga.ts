@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Actions, BaseAction, getProfileWatcher, updateProfile, PlayerLoginData } from './actionCreators';
+import { Actions, BaseAction, updateProfile, PlayerLoginData } from './actionCreators';
 import { takeLatest, call, put } from 'redux-saga/effects';
 
 const apiClient = axios.create({
@@ -27,7 +27,7 @@ function getProfileApi() {
 function* loginEffectSaga(action: BaseAction) {
   try {
     yield call(loginApi, action.payload);
-    yield put(getProfileWatcher());
+    yield put({type: Actions.WATCH_GET_PROFILE});
   } catch (e) {
     // catch error on a bad axios call
     // alert using an alert library
@@ -46,10 +46,10 @@ function * getProfileEffectSaga(action: BaseAction) {
   }
 }
 
-export function* loginWatcherSaga() {
-  yield takeLatest(Actions.LOGIN_WATCHER, loginEffectSaga);
+export function* watchLoginSaga() {
+  yield takeLatest(Actions.WATCH_LOGIN, loginEffectSaga);
 }
 
-export function* getProfileWatcherSaga() {
-  yield takeLatest(Actions.GET_PROFILE_WATCHER, getProfileEffectSaga);
+export function* watchGetProfileSaga() {
+  yield takeLatest(Actions.WATCH_GET_PROFILE, getProfileEffectSaga);
 }

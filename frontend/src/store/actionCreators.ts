@@ -1,6 +1,6 @@
 export enum Actions {
-  LOGIN_WATCHER = 'LOGIN_WATCHER',
-  GET_PROFILE_WATCHER = 'GET_PROFILE_WATCHER',
+  WATCH_LOGIN = 'WATCH_LOGIN',
+  WATCH_GET_PROFILE = 'WATCH_GET_PROFILE',
   UPDATE_PROFILE = 'UPDATE_PROFILE',
 }
 
@@ -14,12 +14,12 @@ export interface PlayerLoginData {
   password: string;
 }
 
-export function loginWatcher(playerLoginData: PlayerLoginData): BaseAction {
-  return { type: Actions.LOGIN_WATCHER, payload: playerLoginData };
+export function watchLogin(playerLoginData: PlayerLoginData): BaseAction {
+  return { type: Actions.WATCH_LOGIN, payload: playerLoginData };
 }
 
-export function getProfileWatcher(): BaseAction {
-  return { type: Actions.GET_PROFILE_WATCHER, payload: {} };
+export function watchGetProfile(): BaseAction {
+  return { type: Actions.WATCH_GET_PROFILE, payload: {} };
 }
 
 // FIXME add more
