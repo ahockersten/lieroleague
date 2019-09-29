@@ -1,14 +1,22 @@
 import React from 'react';
+import { Provider } from 'react-redux';
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import AddPlayer from './AddPlayer'
+import Login from './Login'
+import store from './store'
 
 const App: React.FC = () =>
-  <Router>
-    <Switch>
-      <Route path="/">
-        <AddPlayer />
-      </Route>
-    </Switch>
-  </Router>
+  <Provider store={store}>
+    <Router>
+      <Switch>
+        <Route path="/">
+          <Login />
+        </Route>
+        <Route path="/add-player">
+          <AddPlayer />
+        </Route>
+      </Switch>
+    </Router>
+  </Provider>
 
 export default App;

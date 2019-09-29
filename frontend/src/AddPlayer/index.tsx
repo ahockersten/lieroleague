@@ -1,5 +1,4 @@
 import Button from '@material-ui/core/Button';
-import FormControl from '@material-ui/core/FormControl';
 import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
 import Slider from '@material-ui/core/Slider';
@@ -8,7 +7,7 @@ import Typography from '@material-ui/core/Typography';
 import React from 'react';
 
 const AddPlayer: React.FC = () =>
-  <FormControl>
+  <form>
     <TextField
       required
       id="email"
@@ -87,10 +86,10 @@ const AddPlayer: React.FC = () =>
       <MenuItem value={"Poland"}>Poland</MenuItem>
       <MenuItem value={"Sweden"}>Sweden</MenuItem>
     </Select>
-    <Button variant="contained" color="primary">
+    <Button variant="contained" color="primary" type="submit">
       Add player
     </Button>
-  </FormControl>
+  </form>
 
 const ColorPicker: React.FC = () =>
   <div>
