@@ -1,12 +1,17 @@
 export enum Actions {
   WATCH_LOGIN = 'WATCH_LOGIN',
   WATCH_GET_PROFILE = 'WATCH_GET_PROFILE',
-  UPDATE_PROFILE = 'UPDATE_PROFILE',
+  UPDATE_PROFILE = 'UPDATE_PROFILE'
 }
 
 export interface BaseAction {
   type: Actions;
-  payload: any;
+  payload: object;
+}
+
+export interface LoginAction {
+  type: Actions;
+  payload: PlayerLoginData;
 }
 
 export interface PlayerLoginData {
@@ -27,6 +32,8 @@ export interface PlayerProfileData {
   nickName: string;
 }
 
-export function updateProfile(playerProfileData: PlayerProfileData): BaseAction {
+export function updateProfile(
+  playerProfileData: PlayerProfileData
+): BaseAction {
   return { type: Actions.UPDATE_PROFILE, payload: playerProfileData };
 }

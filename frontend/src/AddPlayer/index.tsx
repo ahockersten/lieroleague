@@ -6,7 +6,7 @@ import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import React from 'react';
 
-const AddPlayer: React.FC = () =>
+const AddPlayer: React.FC = () => (
   <form>
     <TextField
       required
@@ -54,44 +54,42 @@ const AddPlayer: React.FC = () =>
     />
     <ColorPicker />
     <Select
-      value={"Swedish"}
-      onChange={() => {}}
+      value={'Swedish'}
       inputProps={{
         name: 'nationality',
-        id: 'nationality',
+        id: 'nationality'
       }}
     >
-      <MenuItem value={"Polish"}>Polish</MenuItem>
-      <MenuItem value={"Swedish"}>Swedish</MenuItem>
+      <MenuItem value={'Polish'}>Polish</MenuItem>
+      <MenuItem value={'Swedish'}>Swedish</MenuItem>
     </Select>
     <Select
-      value={"CEST"}
-      onChange={() => {}}
+      value={'CEST'}
       inputProps={{
         name: 'timezone',
-        id: 'timezone',
+        id: 'timezone'
       }}
     >
-      <MenuItem value={"CEST"}>CEST</MenuItem>
-      <MenuItem value={"GMT"}>GMT</MenuItem>
+      <MenuItem value={'CEST'}>CEST</MenuItem>
+      <MenuItem value={'GMT'}>GMT</MenuItem>
     </Select>
     <Select
-      value={"Sweden"}
-      onChange={() => {}}
+      value={'Sweden'}
       inputProps={{
         name: 'location',
-        id: 'location',
+        id: 'location'
       }}
     >
-      <MenuItem value={"Poland"}>Poland</MenuItem>
-      <MenuItem value={"Sweden"}>Sweden</MenuItem>
+      <MenuItem value={'Poland'}>Poland</MenuItem>
+      <MenuItem value={'Sweden'}>Sweden</MenuItem>
     </Select>
     <Button variant="contained" color="primary" type="submit">
       Add player
     </Button>
   </form>
+);
 
-const ColorPicker: React.FC = () =>
+const ColorPicker: React.FC = () => (
   <div>
     <Typography id="red-picker" gutterBottom>
       Red
@@ -127,5 +125,6 @@ const ColorPicker: React.FC = () =>
       max={255}
     />
   </div>
+);
 
 export default AddPlayer;

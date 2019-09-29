@@ -1,8 +1,10 @@
-import { Actions, BaseAction, PlayerLoginData } from '../actions';
-import { apiClient } from './index';
+import { SagaIterator } from '@redux-saga/core';
 import { takeLatest, call, put } from 'redux-saga/effects';
+import { Actions, LoginAction, PlayerLoginData } from '../actions';
+import { apiClient } from './index';
+import { PlayerProfile } from '../reducers/playerProfile.reducer';
 
-function loginApi(playerLoginData: PlayerLoginData) {
+function loginApi(playerLoginData: PlayerLoginData): Promise<void> {
   return apiClient.request({
     method: 'post',
     url: '/player/login',
@@ -10,26 +12,26 @@ function loginApi(playerLoginData: PlayerLoginData) {
   });
 }
 
-function getProfileApi() {
+function getProfileApi(): Promise<PlayerProfile> {
   return apiClient.request({
     method: 'get',
-    url: '/player/profile',
+    url: '/player/profile'
   });
 }
 
-function* loginEffectSaga(action: BaseAction) {
+function* loginEffectSaga(action: LoginAction): SagaIterator {
   try {
     yield call(loginApi, action.payload);
-    yield put({type: Actions.WATCH_GET_PROFILE});
+    yield put({ type: Actions.WATCH_GET_PROFILE });
   } catch (e) {
     // catch error on a bad axios call
     // alert using an alert library
   }
 }
 
-function* getProfileEffectSaga(action: BaseAction) {
+function* getProfileEffectSaga(): SagaIterator {
   try {
-    let { data } = yield call(getProfileApi);
+    const { data } = yield call(getProfileApi);
 
     yield put({ type: Actions.UPDATE_PROFILE, payload: data });
   } catch (e) {
@@ -38,10 +40,10 @@ function* getProfileEffectSaga(action: BaseAction) {
   }
 }
 
-export function* watchLoginSaga() {
+export function* watchLoginSaga(): SagaIterator {
   yield takeLatest(Actions.WATCH_LOGIN, loginEffectSaga);
 }
 
-export function* watchGetProfileSaga() {
+export function* watchGetProfileSaga(): SagaIterator {
   yield takeLatest(Actions.WATCH_GET_PROFILE, getProfileEffectSaga);
 }

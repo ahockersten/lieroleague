@@ -10,13 +10,10 @@ import reducers from '../reducers';
 const sagaMiddleware = createSagaMiddleware();
 
 /** Create middlewares for redux */
-let middlewares = applyMiddleware(sagaMiddleware, createLogger());
+const middlewares = applyMiddleware(sagaMiddleware, createLogger());
 
 /** Create redux store */
-const store = createStore(
-  reducers,
-  composeWithDevTools(middlewares),
-);
+const store = createStore(reducers, composeWithDevTools(middlewares));
 
 /** run saga watchers */
 sagaMiddleware.run(rootSaga);

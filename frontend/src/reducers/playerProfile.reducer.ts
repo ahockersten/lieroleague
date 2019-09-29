@@ -20,20 +20,23 @@ export type PlayerColor = {
   r: number;
   b: number;
   g: number;
-}
+};
 
 const defaultPlayerProfile = {
   nickName: undefined,
   email: undefined
-}
+};
 
-export const playerProfileReducer = (state: PlayerProfile = defaultPlayerProfile, action: BaseAction) => {
+export const playerProfileReducer = (
+  state: PlayerProfile = defaultPlayerProfile,
+  action: BaseAction
+): PlayerProfile => {
   switch (action.type) {
     case Actions.UPDATE_PROFILE:
       return {
         ...action.payload
-      }
+      };
     default:
       return state;
   }
-}
+};
