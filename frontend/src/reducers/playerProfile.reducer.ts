@@ -1,4 +1,4 @@
-import { Actions, BaseAction } from '../store/actionCreators';
+import { Actions, BaseAction } from '../actions';
 
 export type PlayerProfile = {
   nickName?: string;

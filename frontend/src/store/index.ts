@@ -1,3 +1,4 @@
+import axios from 'axios';
 import createSagaMiddleware from 'redux-saga';
 import { createStore, applyMiddleware } from 'redux';
 import { composeWithDevTools } from 'redux-devtools-extension';
@@ -18,5 +19,10 @@ const store = createStore(
 
 /** run saga watchers */
 sagaMiddleware.run(rootSaga);
+
+export const apiClient = axios.create({
+  baseURL: 'http://localhost:8000',
+  withCredentials: true
+});
 
 export default store;

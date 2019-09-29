@@ -3,7 +3,7 @@ import TextField from '@material-ui/core/TextField';
 import React, {useState} from 'react';
 import { connect } from 'react-redux';
 import { bindActionCreators, Dispatch } from 'redux';
-import { watchLogin } from '../store/actionCreators';
+import { watchLogin } from '../actions';
 import { State } from '../reducers';
 import { PlayerProfile } from '../reducers/playerProfile.reducer'
 
