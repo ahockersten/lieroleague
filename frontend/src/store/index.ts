@@ -1,5 +1,6 @@
 import createSagaMiddleware from 'redux-saga';
-import { createStore, compose, applyMiddleware } from 'redux';
+import { createStore, applyMiddleware } from 'redux';
+import { composeWithDevTools } from 'redux-devtools-extension';
 import rootSaga from './rootSaga';
 import reducers from '../reducers';
 
@@ -12,7 +13,7 @@ let middlewares = applyMiddleware(sagaMiddleware);
 /** Create redux store */
 const store = createStore(
   reducers,
-  compose(middlewares)
+  composeWithDevTools(middlewares),
 );
 
 /** run saga watchers */
