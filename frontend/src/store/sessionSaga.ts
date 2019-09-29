@@ -10,7 +10,6 @@ function loginApi(playerLoginData: PlayerLoginData) {
   });
 }
 
-/** function that returns an axios call */
 function getProfileApi() {
   return apiClient.request({
     method: 'get',
@@ -18,7 +17,6 @@ function getProfileApi() {
   });
 }
 
-/** saga worker that is responsible for the side effects */
 function* loginEffectSaga(action: BaseAction) {
   try {
     yield call(loginApi, action.payload);
@@ -29,7 +27,7 @@ function* loginEffectSaga(action: BaseAction) {
   }
 }
 
-function * getProfileEffectSaga(action: BaseAction) {
+function* getProfileEffectSaga(action: BaseAction) {
   try {
     let { data } = yield call(getProfileApi);
 
