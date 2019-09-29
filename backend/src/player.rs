@@ -399,9 +399,6 @@ fn get_profile(
 ) -> Option<Json<PlayerProfile>> {
     // FIXME this is needed everywhere right now :/
     state::initialize_state(&db, state.clone());
-    for c in cookies.iter() {
-        println!("Name: '{}', Value: '{}'", c.name(), c.value());
-    }
     let maybe_user_id_cookie = cookies.get_private("user_id");
     match maybe_user_id_cookie {
         None => None,

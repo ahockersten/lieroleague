@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { Actions, BaseAction, updateProfile, PlayerLoginData } from './actionCreators';
+import { Actions, BaseAction, getProfileWatcher, updateProfile, PlayerLoginData } from './actionCreators';
 import { takeLatest, call, put } from 'redux-saga/effects';
 
 const apiClient = axios.create({
@@ -27,7 +27,7 @@ function getProfileApi() {
 function* loginEffectSaga(action: BaseAction) {
   try {
     yield call(loginApi, action.payload);
-    yield put({ type: Actions.GET_PROFILE_WATCHER });
+    yield put(getProfileWatcher());
   } catch (e) {
     // catch error on a bad axios call
     // alert using an alert library
@@ -39,7 +39,7 @@ function * getProfileEffectSaga(action: BaseAction) {
     let { data } = yield call(getProfileApi);
 
     // dispatch action to change redux state
-    yield put(updateProfile(data.profile));
+    yield put(updateProfile(data));
   } catch (e) {
     // catch error on a bad axios call
     // alert using an alert library

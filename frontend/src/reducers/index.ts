@@ -2,7 +2,7 @@ import { combineReducers} from 'redux';
 import { playerProfileReducer, PlayerProfile } from './playerProfile.reducer';
 
 export interface State {
-  playerProfile : PlayerProfile;
+  playerProfile: PlayerProfile;
 };
 
 const reducers = combineReducers<State>({

@@ -12,8 +12,7 @@ export const playerProfileReducer = (state: PlayerProfile = defaultPlayerProfile
   switch (action.type) {
     case Actions.UPDATE_PROFILE:
       return {
-        ...state,
-        playerProfile: action.payload
+        ...action.payload
       }
     default:
       return state;
