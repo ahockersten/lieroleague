@@ -1,13 +1,9 @@
 // ./src/components/Navbar.tsx
 
-import * as React from 'react'
+import * as React from 'react';
 
-const NavbarScroller = () => {
-  return (
-    <div>
+const NavbarScroller: React.FC = () => {
+  return <div></div>;
+};
 
-    </div>
-  )
-}
-
-export default NavbarScroller
+export default NavbarScroller;
