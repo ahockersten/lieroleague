@@ -20,5 +20,4 @@ matrix:
         - rustup component add rustfmt
       script:
         - cargo fmt --all -- --check
-        - cargo build --release
         - cargo test
