@@ -3,6 +3,7 @@ matrix:
     - language: node_js
       node_js:
         - 12
+      cache: yarn
       install:
         - cd frontend
         - yarn install
@@ -13,6 +14,7 @@ matrix:
     - language: rust
       rust:
         - nightly
+      cache: cargo
       install:
         - cd backend
         - rustup component add rustfmt
