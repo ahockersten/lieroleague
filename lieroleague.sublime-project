@@ -22,7 +22,7 @@
 				"enabled": true
 			}
 		},
-  "SublimeLinter.linters.tslint.disable": true,
-  "SublimeLinter.linters.eslint.selector": "source.ts, source.tsx"
+    "SublimeLinter.linters.tslint.disable": true,
+    "SublimeLinter.linters.eslint.selector": "source.ts, source.tsx",
 	}
 }
