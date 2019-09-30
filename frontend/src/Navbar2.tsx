@@ -1,7 +1,7 @@
 // import React from 'react';
-import React, { Component } from 'react';
+import React from 'react';
 
-export const Navbar: React.FC = ({children}) =>
+export const Navbar: React.FC = () => (
   // <div>
   //   Hello I am navbar
   //   {children}
@@ -9,12 +9,21 @@ export const Navbar: React.FC = ({children}) =>
 
   <div>
     <ul id="nav">
-      <li><a href="#">Home</a></li>
-      <li><a href="#">About</a></li>
-      <li><a href="#">FAQ</a></li>
-      <li><a href="#">Contact</a></li>
+      <li>
+        <a href="#">Home</a>
+      </li>
+      <li>
+        <a href="#">About</a>
+      </li>
+      <li>
+        <a href="#">FAQ</a>
+      </li>
+      <li>
+        <a href="#">Contact</a>
+      </li>
     </ul>
   </div>
+);
 
 //   <Navbar bg="light" expand="lg">
 //   <Navbar.Brand href="#home">React-Bootstrap</Navbar.Brand>
