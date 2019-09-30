@@ -1,12 +1,19 @@
-language: node_js
-node_js:
-  - "12"
-
-install:
-  - cd frontend
-  - yarn install
-
-script:
-  - yarn lint
-  - yarn test
-  - yarn build
+matrix:
+  include:
+    - language: node_js
+      node_js:
+        - 12
+      install:
+        - cd frontend
+        - yarn install
+      script:
+        - yarn lint
+        - yarn test
+        - yarn build
+    - language: rust
+      rust:
+        - nightly
+      install:
+        - cd backend
+      script:
+        - cargo build --release
