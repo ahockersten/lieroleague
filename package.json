@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "@material-ui/icons": "^4.4.3",
+    "rust": "^0.1.6",
+    "winapi": "^2.7.3"
+  }
+}

@@ -5,10 +5,12 @@ import Slider from '@material-ui/core/Slider';
 import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import React from 'react';
+import './add-player.css';
 
 const AddPlayer: React.FC = () => (
-  <form>
+  <form className="addplayerform">
     <TextField
+      className="textfield"
       required
       id="email"
       type="email"
@@ -20,6 +22,7 @@ const AddPlayer: React.FC = () => (
       variant="outlined"
     />
     <TextField
+      className="textfield"
       id="password-input"
       label="Password"
       type="password"
@@ -28,6 +31,7 @@ const AddPlayer: React.FC = () => (
       variant="outlined"
     />
     <TextField
+      className="textfield"
       id="repeat-password-input"
       label="Repeat password"
       type="password"
@@ -36,6 +40,7 @@ const AddPlayer: React.FC = () => (
       variant="outlined"
     />
     <TextField
+      className="textfield"
       required
       id="nickname"
       label="Nickname"
@@ -45,6 +50,7 @@ const AddPlayer: React.FC = () => (
       variant="outlined"
     />
     <TextField
+      className="textfield"
       id="real-name"
       label="Real name"
       autoComplete="name"

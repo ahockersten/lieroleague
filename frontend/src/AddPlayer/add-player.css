@@ -1,0 +1,17 @@
+* {
+  font-size: 14px;
+}
+
+.addplayerform {
+    width: 80%;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.textfield {
+  width: 50%;
+  margin: auto;
+  display: inline-block !important;
+}
