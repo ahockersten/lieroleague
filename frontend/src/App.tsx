@@ -5,10 +5,9 @@ import AddPlayer from './AddPlayer';
 import Header from './Header';
 import Login from './Login';
 import store from './store';
+import CssBaseline from '@material-ui/core/CssBaseline';
 
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
-
-import './app.css';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -30,6 +29,7 @@ const App: React.FC = () => {
 
   return (
     <Provider store={store}>
+      <CssBaseline />
       <Header></Header>
       <div className={classes.body}>
         <Router>

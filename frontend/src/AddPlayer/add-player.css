@@ -2,13 +2,13 @@
   font-size: 14px;
 }
 
-.addplayerform {
+/* .addplayerform {
     width: 80%;
     margin: auto;
     display: flex;
     flex-direction: column;
     justify-content: center;
-}
+} */
 
 .textfield {
   width: 50%;

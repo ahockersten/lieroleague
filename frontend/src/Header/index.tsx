@@ -10,8 +10,6 @@ import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
 
-import './header.css';
-
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -27,12 +25,17 @@ const useStyles = makeStyles((theme: Theme) =>
     toolBar: {
       backgroundColor: '#333333',
       minHeight: 40,
+      fontFamily: 'Verdana',
+      fontSize: 10,
     },
     button: {
+      // fontSize: 10, doesn't apply
+      borderRadius: 0,
       marginLeft: 8,
       marginRight: 8,
       "&:hover": {
         color: '#bbb',
+        backgroundColor: '#282828',
       },
     },
   }),
