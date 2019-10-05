@@ -1,28 +1,33 @@
 {
-	"folders":
-	[
-		{
-			"file_exclude_patterns":
-			[
-				"lieroleague.sublime-workspace"
-			],
-			"folder_exclude_patterns":
-			[
-				"frontend/node_modules"
-			],
-			"path": "."
-		}
-	],
-	"settings":
-	{
-		"LSP":
-		{
-			"rls":
-			{
-				"enabled": true
-			}
-		},
+  "folders":
+  [
+    {
+      "file_exclude_patterns":
+      [
+        "lieroleague.sublime-workspace",
+        "npm-debug.log*",
+        "yarn-debug.log*",
+        "yarn-error.log*"
+      ],
+      "folder_exclude_patterns":
+      [
+        "frontend/node_modules",
+        "frontend/build",
+        "backend/target"
+      ],
+      "path": "."
+    }
+  ],
+  "settings":
+  {
+    "LSP":
+    {
+      "rls":
+      {
+        "enabled": true
+      }
+    },
     "SublimeLinter.linters.tslint.disable": true,
     "SublimeLinter.linters.eslint.selector": "source.ts, source.tsx",
-	}
+  }
 }
