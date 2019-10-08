@@ -3,6 +3,7 @@ import MenuItem from '@material-ui/core/MenuItem';
 import Select from '@material-ui/core/Select';
 import Slider from '@material-ui/core/Slider';
 import TextField from '@material-ui/core/TextField';
+import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
 import React from 'react';
 import './add-player.css';
@@ -25,9 +26,16 @@ const useStyles = makeStyles((theme: Theme) =>
       paddingBottom: 4,
       paddingLeft: 4,
       paddingRight: 4,
-      margin: 0,
+      margin: 4,
       fontSize: 10,
       boxSizing: 'inherit',
+    },
+    select: {
+      minWidth: 200,
+    },
+    grid: {
+      margin: 4,
+      width: '65%',
     },
   }),
 );
@@ -52,7 +60,8 @@ const AddPlayer: React.FC = () => {
         variant="outlined"
       />
       <TextField
-        className="textfield"
+        className={classes.textfield}
+        required
         id="password-input"
         label="Password"
         type="password"
@@ -61,7 +70,8 @@ const AddPlayer: React.FC = () => {
         variant="outlined"
       />
       <TextField
-        className="textfield"
+        required
+        className={classes.textfield}
         id="repeat-password-input"
         label="Repeat password"
         type="password"
@@ -70,7 +80,7 @@ const AddPlayer: React.FC = () => {
         variant="outlined"
       />
       <TextField
-        className="textfield"
+        className={classes.textfield}
         required
         id="nickname"
         label="Nickname"
@@ -80,7 +90,7 @@ const AddPlayer: React.FC = () => {
         variant="outlined"
       />
       <TextField
-        className="textfield"
+        className={classes.textfield}
         id="real-name"
         label="Real name"
         autoComplete="name"
@@ -89,36 +99,70 @@ const AddPlayer: React.FC = () => {
         variant="outlined"
       />
       <ColorPicker />
-      <Select
-        value={'Swedish'}
-        inputProps={{
-          name: 'nationality',
-          id: 'nationality'
-        }}
+
+
+      <Grid
+        container
+        className={classes.grid}
+        direction="row"
+        justify="space-between"
+        alignItems="center"
       >
-        <MenuItem value={'Polish'}>Polish</MenuItem>
-        <MenuItem value={'Swedish'}>Swedish</MenuItem>
-      </Select>
-      <Select
-        value={'CEST'}
-        inputProps={{
-          name: 'timezone',
-          id: 'timezone'
-        }}
+        <Typography>Nationality: </Typography>
+        <Select
+          className={classes.select}
+          value={'Swedish'}
+          inputProps={{
+            name: 'nationality',
+            id: 'nationality'
+          }}
+        >
+          <MenuItem value={'Polish'}>Polish</MenuItem>
+          <MenuItem value={'Swedish'}>Swedish</MenuItem>
+        </Select>
+      </Grid>
+
+      <Grid
+        container
+        className={classes.grid}
+        direction="row"
+        justify="space-between"
+        alignItems="center"
       >
-        <MenuItem value={'CEST'}>CEST</MenuItem>
-        <MenuItem value={'GMT'}>GMT</MenuItem>
-      </Select>
-      <Select
-        value={'Sweden'}
-        inputProps={{
-          name: 'location',
-          id: 'location'
-        }}
+        <Typography>Timezone: </Typography>
+        <Select
+          className={classes.select}
+          value={'CEST'}
+          inputProps={{
+            name: 'timezone',
+            id: 'timezone'
+          }}
+        >
+          <MenuItem value={'CEST'}>CEST</MenuItem>
+          <MenuItem value={'GMT'}>GMT</MenuItem>
+        </Select>
+      </Grid>
+
+      <Grid
+        container
+        className={classes.grid}
+        direction="row"
+        justify="space-between"
+        alignItems="center"
       >
-        <MenuItem value={'Poland'}>Poland</MenuItem>
-        <MenuItem value={'Sweden'}>Sweden</MenuItem>
-      </Select>
+        <Typography>Location: </Typography>
+        <Select
+          className={classes.select}
+          value={'Sweden'}
+          inputProps={{
+            name: 'location',
+            id: 'location'
+          }}
+        >
+          <MenuItem value={'Poland'}>Poland</MenuItem>
+          <MenuItem value={'Sweden'}>Sweden</MenuItem>
+        </Select>
+      </Grid>
       <Button variant="contained" color="primary" type="submit">
         Add player
       </Button>
