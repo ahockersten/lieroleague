@@ -22,7 +22,6 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 
-
 const App: React.FC = () => {
 
   const classes = useStyles();
