@@ -33,10 +33,10 @@ pub enum PlayerCommand {
         locale: Locale,
     },
     LoginSuccess {
-        id: Uuid,
+        id: PlayerId,
     },
     LoginFail {
-        id: Uuid,
+        id: PlayerId,
     }, // FIXME add ip number of login attempt for tracking purposes
 }
 
@@ -45,7 +45,7 @@ pub enum PlayerCommand {
 #[event_source("events://github.com/ahockersten/lieroleague/player")]
 pub enum PlayerEvent {
     Created {
-        id: Uuid,
+        id: PlayerId,
         real_name: String,
         email: Email,
         salted_password: [i8; 24],
@@ -58,10 +58,10 @@ pub enum PlayerEvent {
         locale: Locale,
     },
     LoggedIn {
-        id: Uuid,
+        id: PlayerId,
     },
     LoginFailure {
-        id: Uuid,
+        id: PlayerId,
     },
 }
 
@@ -142,6 +142,7 @@ impl From<PlayerCommand> for PlayerEvent {
     }
 }
 
+pub type PlayerId = Uuid;
 type Email = String;
 type Nationality = String;
 type Country = String;
@@ -160,7 +161,7 @@ pub struct PlayerColor {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct PlayerData {
-    pub id: Uuid,
+    pub id: PlayerId,
     pub real_name: String,
     pub email: Email,
     salted_password: [u8; 24],
@@ -320,7 +321,7 @@ fn verify_login(
 }
 
 fn find_existing_player_data_by_email(
-    player_datas: HashMap<Uuid, PlayerData>,
+    player_datas: HashMap<PlayerId, PlayerData>,
     email: String,
 ) -> Option<PlayerData> {
     player_datas
