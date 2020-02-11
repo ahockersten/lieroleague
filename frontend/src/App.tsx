@@ -17,15 +17,11 @@ const useStyles = makeStyles((theme: Theme) =>
       margin: 'auto',
       marginTop: 16,
       marginBottom: 16
-    },
-  }),
+    }
+  })
 );
 
-
-
-
 const App: React.FC = () => {
-
   const classes = useStyles();
 
   return (
@@ -46,7 +42,6 @@ const App: React.FC = () => {
       </div>
     </Provider>
   );
-
 };
 
 export default App;
