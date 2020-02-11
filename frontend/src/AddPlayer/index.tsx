@@ -8,9 +8,9 @@ import Typography from '@material-ui/core/Typography';
 import React from 'react';
 import './add-player.css';
 
-import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
+import { createStyles, makeStyles/*, Theme*/ } from '@material-ui/core/styles';
 
-const useStyles = makeStyles((theme: Theme) =>
+const useStyles = makeStyles((/*theme: Theme*/) =>
   createStyles({
     addplayerform: {
       width: '60%',
@@ -36,9 +36,8 @@ const useStyles = makeStyles((theme: Theme) =>
     grid: {
       margin: 4,
       width: '65%'
-    },
-  }),
-);
+    }
+  }));
 
 const AddPlayer: React.FC = () => {
   const classes = useStyles();
@@ -165,7 +164,6 @@ const AddPlayer: React.FC = () => {
       </Button>
     </form>
   );
-
 };
 const ColorPicker: React.FC = () => (
   <div>

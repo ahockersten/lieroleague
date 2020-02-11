@@ -10,61 +10,70 @@ import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import MenuIcon from '@material-ui/icons/Menu';
 
-
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
-      flexGrow: 1,
+      flexGrow: 1
     },
     menuButton: {
-      marginRight: theme.spacing(2),
+      marginRight: theme.spacing(2)
     },
     title: {
-      flexGrow: 1,
+      flexGrow: 1
     },
     toolBar: {
       backgroundColor: '#333333',
       minHeight: 40,
       fontFamily: 'Verdana',
-      fontSize: 10,
+      fontSize: 10
     },
     button: {
       // fontSize: 10, doesn't apply
       borderRadius: 0,
       marginLeft: 8,
       marginRight: 8,
-      "&:hover": {
+      '&:hover': {
         color: '#bbb',
-        backgroundColor: '#282828',
-      },
-    },
-  }),
+        backgroundColor: '#282828'
+      }
+    }
+  })
 );
 
-
 const Header: React.FC = () => {
-
   const classes = useStyles();
 
   return (
     <div className={classes.root}>
-        <AppBar position="static">
-          <Toolbar className={classes.toolBar}>
-            <IconButton edge="start" className={classes.menuButton} color="inherit" aria-label="menu">
-              <MenuIcon />
-            </IconButton>
-            <Typography variant="h6" className={classes.title}>
-              LieroLeague
-            </Typography>
-            <Button color="inherit" className={classes.button}>Players</Button>
-            <Button color="inherit" className={classes.button}>Maps</Button>
-            <Button color="inherit" className={classes.button}>Profile</Button>
-            <Button color="inherit" className={classes.button}>Login</Button>
-          </Toolbar>
-        </AppBar>
-      </div>
+      <AppBar position="static">
+        <Toolbar className={classes.toolBar}>
+          <IconButton
+            edge="start"
+            className={classes.menuButton}
+            color="inherit"
+            aria-label="menu"
+          >
+            <MenuIcon />
+          </IconButton>
+          <Typography variant="h6" className={classes.title}>
+            LieroLeague
+          </Typography>
+          <Button color="inherit" className={classes.button}>
+            Players
+          </Button>
+          <Button color="inherit" className={classes.button}>
+            Maps
+          </Button>
+          <Button color="inherit" className={classes.button}>
+            Profile
+          </Button>
+          <Button color="inherit" className={classes.button}>
+            Login
+          </Button>
+        </Toolbar>
+      </AppBar>
+    </div>
   );
-
 };
 
 export default Header;

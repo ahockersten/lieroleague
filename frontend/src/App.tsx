@@ -7,9 +7,9 @@ import Login from './Login';
 import store from './store';
 import CssBaseline from '@material-ui/core/CssBaseline';
 
-import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
+import { createStyles, makeStyles/*, Theme*/ } from '@material-ui/core/styles';
 
-const useStyles = makeStyles((theme: Theme) =>
+const useStyles = makeStyles((/*theme: Theme*/) =>
   createStyles({
     body: {
       maxWidth: 1024,
@@ -18,8 +18,7 @@ const useStyles = makeStyles((theme: Theme) =>
       marginTop: 16,
       marginBottom: 16
     }
-  })
-);
+  }));
 
 const App: React.FC = () => {
   const classes = useStyles();
