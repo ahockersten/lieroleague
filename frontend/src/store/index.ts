@@ -1,4 +1,4 @@
-import axios from 'axios';
+import ky from 'ky';
 import { createLogger } from 'redux-logger';
 import createSagaMiddleware from 'redux-saga';
 import { createStore, applyMiddleware } from 'redux';
@@ -18,9 +18,9 @@ const store = createStore(reducers, composeWithDevTools(middlewares));
 /** run saga watchers */
 sagaMiddleware.run(rootSaga);
 
-export const apiClient = axios.create({
-  baseURL: 'http://localhost:8000',
-  withCredentials: true
+export const apiClient = ky.extend({
+  prefixUrl: 'http://localhost:8000',
+  credentials: 'include' // FIXME somewhat dangerous?
 });
 
 export default store;

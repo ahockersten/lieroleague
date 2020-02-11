@@ -5,28 +5,30 @@
   "dependencies": {
     "@material-ui/core": "^4.3.3",
     "@material-ui/icons": "^4.4.3",
-    "@types/jest": "24.0.18",
-    "@types/node": "12.7.2",
+    "@types/jest": "^25.1.1",
+    "@types/node": "13.7.0",
     "@types/react": "^16.9.3",
-    "@types/react-dom": "16.9.0",
+    "@types/react-dom": "16.9.5",
     "@types/react-redux": "^7.1.4",
     "@types/react-router-dom": "^5.1.0",
     "@types/redux-logger": "^3.0.7",
-    "axios": "^0.19.0",
+    "babel-eslint": "^10.0.3",
+    "ky": "0.16.2",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
     "react-redux": "^7.1.1",
     "react-router-dom": "^5.1.1",
-    "react-scripts": "3.1.1",
+    "react-scripts": "^3.3.1",
+    "redux": "^4.0.5",
     "redux-devtools-extension": "^2.13.8",
     "redux-logger": "^3.0.6",
     "redux-saga": "^1.1.1",
-    "typescript": "3.6.2"
+    "typescript": "3.7.5"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "react-scripts test --transformIgnorePatterns \"node_modules/(?!ky)/\"",
     "eject": "react-scripts eject",
     "lint": "eslint './src/**/*.{ts,tsx}'"
   },
@@ -46,13 +48,13 @@
     ]
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^2.3.1",
-    "@typescript-eslint/parser": "^2.3.1",
+    "@typescript-eslint/eslint-plugin": "^2.18.0",
+    "@typescript-eslint/parser": "^2.18.0",
     "eslint-config-prettier": "^6.3.0",
     "eslint-config-react": "^1.1.7",
-    "eslint-config-react-app": "^5.0.2",
-    "eslint-plugin-prettier": "^3.1.1",
-    "prettier": "^1.18.2"
+    "eslint-config-react-app": "^5.1.0",
+    "eslint-plugin-prettier": "^3.1.2",
+    "prettier": "^1.19.1"
   },
   "prettier": {
     "bracketSpacing": true,
