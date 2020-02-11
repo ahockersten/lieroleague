@@ -18,7 +18,7 @@ const useStyles = makeStyles((theme: Theme) =>
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'center',
-      alignItems: 'center',
+      alignItems: 'center'
     },
     textfield: {
       width: '70%',
@@ -28,21 +28,19 @@ const useStyles = makeStyles((theme: Theme) =>
       paddingRight: 4,
       margin: 4,
       fontSize: 10,
-      boxSizing: 'inherit',
+      boxSizing: 'inherit'
     },
     select: {
-      minWidth: 200,
+      minWidth: 200
     },
     grid: {
       margin: 4,
-      width: '65%',
+      width: '65%'
     },
   }),
 );
 
-
 const AddPlayer: React.FC = () => {
-
   const classes = useStyles();
 
   return (
@@ -99,7 +97,6 @@ const AddPlayer: React.FC = () => {
         variant="outlined"
       />
       <ColorPicker />
-
 
       <Grid
         container
@@ -170,7 +167,6 @@ const AddPlayer: React.FC = () => {
   );
 
 };
-
 const ColorPicker: React.FC = () => (
   <div>
     <Typography id="red-picker" gutterBottom>

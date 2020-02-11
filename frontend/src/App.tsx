@@ -16,10 +16,12 @@ const useStyles = makeStyles((theme: Theme) =>
       width: '90%',
       margin: 'auto',
       marginTop: 16,
-      marginBottom: 16,
+      marginBottom: 16
     },
   }),
 );
+
+
 
 
 const App: React.FC = () => {
