@@ -2,6 +2,7 @@ import React from 'react';
 import { Provider } from 'react-redux';
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 import AddPlayer from './AddPlayer';
+import Players from './Players';
 import Header from './Header';
 import Login from './Login';
 import store from './store';
@@ -30,6 +31,9 @@ const App: React.FC = () => {
       <div className={classes.body}>
         <Router>
           <Switch>
+            <Route path="/players">
+              <Players />
+            </Route>
             <Route path="/add-player">
               <AddPlayer />
             </Route>

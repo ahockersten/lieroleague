@@ -58,7 +58,7 @@ const Header: React.FC = () => {
           <Typography variant="h6" className={classes.title}>
             LieroLeague
           </Typography>
-          <Button color="inherit" className={classes.button}>
+          <Button color="inherit" className={classes.button} href="/players">
             Players
           </Button>
           <Button color="inherit" className={classes.button}>
